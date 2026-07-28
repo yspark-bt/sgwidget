@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>벌툰 상권 분석기 v6.7</title>
+<title>벌툰 상권 분석기 v6.8</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f4f4f6;color:#1d1d1f;padding:14px;min-height:100vh}
@@ -144,7 +144,7 @@ textarea{resize:vertical;min-height:90px;font-size:12px;font-family:'Menlo','Mon
     <div class="logo">🐝</div>
     <div>
       <div class="brand">벌툰 상권 분석기
-        <span class="badge bv">v6.7</span>
+        <span class="badge bv">v6.8</span>
         <span class="badge bchat">채팅 연동형</span>
         <span class="badge bnew">실매출 적용</span>
       </div>
@@ -168,7 +168,7 @@ textarea{resize:vertical;min-height:90px;font-size:12px;font-family:'Menlo','Mon
 
       <!-- 수익 계산식 안내 -->
       <div class="formula-box">
-        <div class="formula-title">💡 수익 계산 공식 · 등급 기준 (v6.7)</div>
+        <div class="formula-title">💡 수익 계산 공식 · 등급 기준 (v6.8)</div>
         <div class="formula-text">순수익 = 예상 월매출 × 56% - 월 임대료  (고정지출 44% 자동 차감)
 C 입점불가: 500만원 미만 (메인 입지 여부 무관)
 M접두사: 메인 입지 확인 시 / 1,000만원당 A / 500만원당 +
@@ -278,7 +278,7 @@ function haversine(lat1,lon1,lat2,lon2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-// ── 카카오맵 API 자동 검증 (v6.7 신규) ──────────
+// ── 카카오맵 API 자동 검증 (v6.8 신규) ──────────
 var KAKAO_DEFAULT_KEY = 'd416bc5280b92ffd709bc7ff889c0640';
 var KAKAO_VERIFY_RESULT = null; // generatePrompt에서 참조
 
@@ -306,7 +306,7 @@ function kakaoAddressSearch(addr, key){
     .replace(/,?\s*(지하\s*\d+|b\d+)\s*$/gi, '')
     .trim();
 
-  // v6.7: 건물명이 아닌 지번/도로명(숫자로 끝나는 부분)만 우선 추출
+  // v6.8: 건물명이 아닌 지번/도로명(숫자로 끝나는 부분)만 우선 추출
   // 예) "영통로127 센타프라자" → "영통로127" (건물명 "센타프라자" 제거 후 검색)
   var numericOnlyMatch = cleanAddr.match(/^(.*?\d+(-\d+)?)\s*[가-힣A-Za-z]*$/);
   var addrOnly = numericOnlyMatch ? numericOnlyMatch[1].trim() : cleanAddr;
@@ -350,7 +350,7 @@ function kakaoAddressSearch(addr, key){
   });
 }
 
-// v6.7.1: 주소→좌표 자동 확인 (Promise 반환, UI 버튼 없이 내부 호출용)
+// v6.8.1: 주소→좌표 자동 확인 (Promise 반환, UI 버튼 없이 내부 호출용)
 function silentGeocode(addr, key){
   var checkEl = $('geocodeCheck');
   return kakaoAddressSearch(addr, key).then(function(doc){
@@ -385,7 +385,7 @@ function kakaoKeywordSearch(query, lat, lon, key){
     .then(function(data){ return data.documents || []; });
 }
 
-// v6.7.1: 반경 500m 15개 항목 자동 검증 (Promise 반환, UI 없이 내부 호출용)
+// v6.8.1: 반경 500m 15개 항목 자동 검증 (Promise 반환, UI 없이 내부 호출용)
 function silentVerify(lat, lon, key){
   var promises = KAKAO_VERIFY_CATEGORIES.map(function(cat){
     return kakaoKeywordSearch(cat.query, lat, lon, key)
@@ -394,14 +394,18 @@ function silentVerify(lat, lon, key){
           docs = docs.filter(function(d){ return d.place_name.indexOf('벌툰') === -1; });
         }
         if(docs.length > 0){
-          var nearest = docs[0];
+          var matches = docs.map(function(d){
+            return { name: d.place_name, distance_m: parseInt(d.distance, 10), address: d.address_name };
+          });
           return { category: cat.label, group: cat.group, found: true,
-            name: nearest.place_name, distance_m: parseInt(nearest.distance, 10), address: nearest.address_name };
+            matches: matches,
+            // 하위호환: 기존 코드가 참조하는 name/distance_m/address는 최근접 매장 기준 유지
+            name: matches[0].name, distance_m: matches[0].distance_m, address: matches[0].address };
         }
-        return { category: cat.label, group: cat.group, found: false };
+        return { category: cat.label, group: cat.group, found: false, matches: [] };
       })
       .catch(function(){
-        return { category: cat.label, group: cat.group, found: false, error: true };
+        return { category: cat.label, group: cat.group, found: false, matches: [], error: true };
       });
   });
   return Promise.all(promises);
@@ -420,7 +424,7 @@ function calcBrandPenalty(lat,lon){
   nearby.sort(function(a,b){return a.dist-b.dist;});
   if(nearby.length===0) return {penalty:1.00,stores:[],desc:'7km 내 벌툰 가맹점 없음 → brand_penalty: 1.00'};
   var closest=nearby[0].dist;
-  // v6.7: 브랜드 패널티는 2km 이내 근접 점포에만 적용. 2km 초과 시 패널티 없음(1.00)
+  // v6.8: 브랜드 패널티는 2km 이내 근접 점포에만 적용. 2km 초과 시 패널티 없음(1.00)
   var p = closest<1 ? 0.90 : (closest<=2 ? 0.95 : 1.00);
   var storeStr=nearby.slice(0,3).map(function(s){return s.name+'('+s.dist+'km)'}).join(', ');
   var desc = closest<=2
@@ -471,7 +475,7 @@ function calcPreview(){
 }
 
 // ── STEP 1: 프롬프트 생성 ─────────────────────────────
-// v6.7.1: 메인 버튼 클릭 시 자동 실행되는 파이프라인 (지오코딩 → 반경 500m 검증 → 프롬프트 생성)
+// v6.8.1: 메인 버튼 클릭 시 자동 실행되는 파이프라인 (지오코딩 → 반경 500m 검증 → 프롬프트 생성)
 function handleGeneratePrompt(){
   var addr = $('iAddr').value.trim();
   var area = $('iArea').value.trim();
@@ -528,19 +532,26 @@ function generatePrompt(){
   var latN=parseFloat(lat)||null;
   var lonN=parseFloat(lon)||null;
   var brand=calcBrandPenalty(latN,lonN);
-  // 카카오맵 API 사전 검증 결과 블록 생성 (v6.7 신규)
+  // 카카오맵 API 사전 검증 결과 블록 생성 (v6.8 신규)
   var kakaoBlockStr='';
   if(KAKAO_VERIFY_RESULT && KAKAO_VERIFY_RESULT.length>0){
     kakaoBlockStr += '\n【위젯 카카오맵 API 사전 검증 완료 — 아래 데이터는 실제 API 조회 결과이므로 그대로 신뢰하고 사용, 재검색 불필요】\n';
     var g1=KAKAO_VERIFY_RESULT.filter(function(r){return r.group==='일반시설';});
     var g2=KAKAO_VERIFY_RESULT.filter(function(r){return r.group==='경쟁업체';});
-    kakaoBlockStr += '[일반시설 — 반경 500m 기준]\n';
+    kakaoBlockStr += '[일반시설 — 반경 500m 기준, 최근접 매장]\n';
     g1.forEach(function(r){
       kakaoBlockStr += '  '+r.category+': '+(r.found?('확인됨 · '+r.name+' · '+r.distance_m+'m'):'500m 내 없음')+'\n';
     });
-    kakaoBlockStr += '[경쟁업체 — 반경 500m 기준]\n';
+    kakaoBlockStr += '[경쟁업체 — 반경 500m 기준, 검색된 매장 전체 나열 — 이름이 일반명사·모호하거나 실존 여부 의심되면 반드시 웹검색으로 실재 여부 재확인]\n';
     g2.forEach(function(r){
-      kakaoBlockStr += '  '+r.category+': '+(r.found?('확인됨 · '+r.name+' · '+r.distance_m+'m'):'500m 내 없음')+'\n';
+      if(!r.found){
+        kakaoBlockStr += '  '+r.category+': 500m 내 없음\n';
+      } else {
+        kakaoBlockStr += '  '+r.category+':\n';
+        r.matches.forEach(function(m){
+          kakaoBlockStr += '    - '+m.name+' · '+m.distance_m+'m · '+(m.address||'')+'\n';
+        });
+      }
     });
   }
   var brandDesc=brand.desc;
@@ -581,7 +592,9 @@ function generatePrompt(){
     +'━━━━━━━━━━━━━━━━\n'
     +'【STEP 0.5】필수 개별 검증 체크리스트 — 절대 생략·추측 금지\n'
     +'━━━━━━━━━━━━━━━━\n'
-    +'✅ 위 [위젯 카카오맵 API 사전 검증 완료] 블록이 있다면, 그 항목들은 실제 API 조회 결과이므로 재검색하지 말고 그대로 신뢰하여 사용할 것\n'
+    +'✅ 위 [위젯 카카오맵 API 사전 검증 완료] 블록이 있다면, 일반시설(올리브영·맥도날드 등)은 재검색하지 말고 그대로 신뢰하여 사용할 것\n'
+    +'⛔ 최악의 실수 사례⑤: 카카오 API의 \'경쟁업체\' 키워드 검색 결과는 이름·업종이 부정확하게 매칭될 수 있음(예: \'보드게임\' 검색 시 실제로는 무관한 \'이프온리\' 같은 곳이 최근접으로 잡히고 진짜 경쟁사인 \'히어로보드게임카페\'는 목록에 있어도 놓칠 수 있음)\n'
+    +'✅ 경쟁업체 항목은 카카오 API가 나열한 후보 전체를 확인하고, 이름이 애매하거나 실제 업종이 의심스러운 곳은 반드시 웹검색으로 실재 여부·정확한 업종을 재확인할 것 — API 목록에 있다고 무조건 진짜 경쟁사로 단정 금지\n'
     +'✅ 카카오 API 블록에 없는 항목만 아래 개별 검색 절차를 따를 것\n'
     +'⛔ 최악의 실수 사례①: 실제로 존재하는 올리브영·맥도날드를 검색 없이 \'미확인/부재\'로 잘못 판정함\n'
     +'⛔ 최악의 실수 사례②: 경쟁업종을 통합 검색해 실제 존재하는 경쟁 브랜드(예: 대전도안점 만화카페 놀숲)를 놓침 — 만화카페·보드게임카페·OTT카페 3개 카테고리를 각각 개별 검색\n'
@@ -635,13 +648,13 @@ function generatePrompt(){
     +'【1순위 출처】BASA 상권분석(basadata.com) / 소상공인365 빅데이터(bigdata.sbiz.or.kr) / 공공데이터포털(data.go.kr)\n'
     +'【2순위 출처】언론·리포트 / 만화카페·PC방 현황 / 임차료 시세\n'
     +'【3순위 출처】당근마켓·네이버부동산 / 나무위키·블로그\n'
-    +'수집 항목 (모두 반경 500m 이내 기준): 상권유형, 경쟁업종(만화카페·PC방), 대중교통, 핵심시설, 성장성\n'    +'⚠️ 단순 유동인구 많다고 고점 절대 금지 — 반드시 벌툰 3대 핵심 고객층 관점으로 분석:\n'    +'  [A] 20~30대 커플: 반경 500m 내 유흥·카페·쇼핑·영화관 밀집 여부, 20~30대 체류형 소비시설 집중 여부\n'    +'  [B] 중·고등학생: 반경 500m 내 중·고교 수, 학원가 여부, 청소년 독자 유동 시간대 관찰\n'    +'  [C] 어린 자녀 동반 가족: 반경 500m 내 아파트단지·키즈카페·마트·공원 등 가족시설 집중 여부\n'    +'→ [A][B][C] 각각 "강함/보통/약함" 판정 — 반드시 500m 내 실제 시설 근거 명시\n'    +'⚠️ STEP 0.5 개별 검색 결과 기반으로만 판정. 검색 안 하고 \'약함\'으로 단정하는 것 금지\n'    +'⚠️ \'약함\' 판정 시 어떤 검색어로 확인했는지 detail 필드에 명시 필수\n'    +'→ 2개 이상 강함=high / 1개만 강함=mid / 모두 약함=low → 체류수요인구 점수 반영\n\n'    +'━━━━━━━━━━━━━━━━\n'    +'【STEP 3】참조 가맹점 선정 및 매출 계산 (v6.7 실매출 기반)\n'
+    +'수집 항목 (모두 반경 500m 이내 기준): 상권유형, 경쟁업종(만화카페·PC방), 대중교통, 핵심시설, 성장성\n'    +'⚠️ 단순 유동인구 많다고 고점 절대 금지 — 반드시 벌툰 3대 핵심 고객층 관점으로 분석:\n'    +'  [A] 20~30대 커플: 반경 500m 내 유흥·카페·쇼핑·영화관 밀집 여부, 20~30대 체류형 소비시설 집중 여부\n'    +'  [B] 중·고등학생: 반경 500m 내 중·고교 수, 학원가 여부, 청소년 독자 유동 시간대 관찰\n'    +'  [C] 어린 자녀 동반 가족: 반경 500m 내 아파트단지·키즈카페·마트·공원 등 가족시설 집중 여부\n'    +'→ [A][B][C] 각각 "강함/보통/약함" 판정 — 반드시 500m 내 실제 시설 근거 명시\n'    +'⚠️ STEP 0.5 개별 검색 결과 기반으로만 판정. 검색 안 하고 \'약함\'으로 단정하는 것 금지\n'    +'⚠️ \'약함\' 판정 시 어떤 검색어로 확인했는지 detail 필드에 명시 필수\n'    +'→ 2개 이상 강함=high / 1개만 강함=mid / 모두 약함=low → 체류수요인구 점수 반영\n\n'    +'━━━━━━━━━━━━━━━━\n'    +'【STEP 3】참조 가맹점 선정 및 매출 계산 (v6.8 실매출 기반)\n'
     +'━━━━━━━━━━━━━━━━\n'
     +'⚠️ 브랜드 근접 가맹점: 위젯이 146개 전체 좌표 기반으로 이미 계산 완료\n'
     +'   → brand_penalty: '+brand.penalty+' ('+brandDesc+')\n'
     +'   → 7km 내 가맹점: '+brandStoreStr+'\n\n'
     +'⚠️ 예상매출 참조 가맹점 선정: 2021년↑ 오픈 107개 실매출 기준\n\n'
-    +'【참조 가맹점 선정 기준 — v6.7】\n'
+    +'【참조 가맹점 선정 기준 — v6.8】\n'
     +'★ 1순위(핵심): 상권 유형 — 가장 중요한 기준\n'
     +'  ↳ 번화가(유흥·쇼핑 중심) / 대학가 / 역세권 / 주거근린 / 신도시 근린상가 / 오피스 등\n'
     +'  ↳ 단순 명칭이 아닌 실질 집객 방식·고객층 패턴이 동일한 상권 유형 선택\n'
@@ -655,7 +668,7 @@ function generatePrompt(){
     +'  ↳ 1·2순위가 잘 맞는 가맹점이 있으면 평수 차이가 ±30% 초과해도 선택 가능\n\n'
     +'⛔ 최악의 실수 사례④: 실제로 검증 안 된 속성(예: 역세권 아닌데 \'역세권\'이라고 기재)을 similarity_reason에 근거로 넣음 — 반드시 실제로 확인된 일치 요소만 기재\n'
     +'\n'
-    +'【참조 가맹점 유사도 가중치(similarity_weight) — v6.7 신규 필수】\n'
+    +'【참조 가맹점 유사도 가중치(similarity_weight) — v6.8 신규 필수】\n'
     +'각 참조 매장마다 실제 일치 정도를 0.0~1.0 사이 숫자로 반드시 산정할 것:\n'
     +'  1.0 = 상권유형·규모·평수 모두 실질적으로 일치\n'
     +'  0.7~0.9 = 상권유형은 일치하나 규모나 세부 속성 일부 차이(예: 역세권 여부 불일치)\n'
@@ -666,7 +679,7 @@ function generatePrompt(){
     +'   base_monthly_sales = Σ(참조매장 매출 × similarity_weight) ÷ Σ(similarity_weight)\n'
     +'   예) 매출 5000만(가중치1.0), 4000만(가중치0.8), 3000만(가중치0.6) → (5000×1.0+4000×0.8+3000×0.6)/(1.0+0.8+0.6) = 9000/2.4 = 3750만\n'
     +'층수보정: 지하=0.90/1~3층=1.00/4~5층=0.95/6층+=0.90 → 현재 '+fp+'\n'
-    +'브랜드보정(위젯 계산 확정 — v6.7: 2km 이내만 적용): '+brand.penalty+' → 직선거리 1km미만=0.90/1~2km=0.95/2km초과=1.00(패널티없음)\n'
+    +'브랜드보정(위젯 계산 확정 — v6.8: 2km 이내만 적용): '+brand.penalty+' → 직선거리 1km미만=0.90/1~2km=0.95/2km초과=1.00(패널티없음)\n'
     +'입지보정: 메인=1.05/주거형=0.95/외각=0.90\n\n'
     +'보정 계산: base × '+fp+' × '+brand.penalty+' × location_penalty = adjusted\n\n'
     +'【2021년↑ 107개 실매출 데이터】(가맹점명/평수/2025년 월평균매출)\n'
@@ -890,7 +903,7 @@ function renderResult(r){
     }
     catH+='<div class="cat-item"><div class="cat-name">'+c.name+'</div><div class="cat-bar"><div class="cat-fill" style="width:'+pct+'%;background:'+col+'"></div></div><div class="cat-score" style="color:'+col+'">'+c.score+'/'+c.max+'</div><div class="cat-main">'+c.main+'</div>'+(segHtml?'<div style="margin-top:5px">'+segHtml+'</div>':'')+'</div>';});
 
-  // 검증 로그 (v6.7 신규)
+  // 검증 로그 (v6.8 신규)
   var vlH='';
   (r.verification_log||[]).forEach(function(v){
     var ok = v.result && v.result.indexOf('존재확인') === 0;
@@ -989,10 +1002,10 @@ function renderResult(r){
     +'<div class="card"><div class="card-title">🏪 참조 유사 가맹점 <span style="font-size:10px;background:#EEF2FF;color:#3B4FB0;border-radius:6px;padding:2px 7px;margin-left:4px">2021년↑ 107개 실매출 · 1순위 도시규모 → 2순위 상권유형 → 3순위 평수</span></div><div class="store-list">'+stH+'</div></div>'
     +(brH?'<div class="card"><div class="card-title">🏷️ 인근 벌툰 가맹점</div>'+brH+'</div>':'')
     +(catH?'<div class="card"><div class="card-title">📊 상권 종합 점수</div><div class="cat-grid">'+catH+'</div></div>':'')
-    +(vlH?'<div class="card"><div class="card-title">🔍 검증 로그 (v6.7 신규 — 실제 검색 근거)</div>'+vlH+'</div>':'')
+    +(vlH?'<div class="card"><div class="card-title">🔍 검증 로그 (v6.8 신규 — 실제 검색 근거)</div>'+vlH+'</div>':'')
     +'<div class="summary-card"><div class="sum-text">'+r.location_summary+'</div><div class="tag-lbl">핵심 강점</div><div class="tags">'+strH+'</div><div class="tag-lbl">주요 리스크</div><div class="tags">'+rkH+'</div></div>'
     +(detH?'<div class="card"><div class="card-title">🔍 세부 분석</div><div class="det-list">'+detH+'</div></div>':'')
-    +'<div class="note"><b>v6.7 · 📅 2026년 최신 · 브랜드거리: 146개 / 예상매출: 2021년↑ 107개 실매출</b><br>'
+    +'<div class="note"><b>v6.8 · 📅 2026년 최신 · 브랜드거리: 146개 / 예상매출: 2021년↑ 107개 실매출</b><br>'
     +'수익공식: 순수익 = 월매출 × 56% - 임대료 (고정지출 44% 자동 차감)<br>'
     +'등급: C(500만↓ 입점불가) · +(500~1천) · A(1천~1.5천) · A+(1.5천~2천) · AA… M=메인입지 접두사<br>'
     +'참조선정: 1순위 도시규모 → 2순위 상권유형(핵심) → 3순위 평수±30%<br>'
