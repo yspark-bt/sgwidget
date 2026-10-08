@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>벌툰 상권 분석기 v9.3</title>
+<title>벌툰 상권 분석기 v9.4</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f4f4f6;color:#1d1d1f;padding:14px;min-height:100vh}
@@ -144,11 +144,11 @@ textarea{resize:vertical;min-height:90px;font-size:12px;font-family:'Menlo','Mon
     <div class="logo">🐝</div>
     <div>
       <div class="brand">벌툰 상권 분석기
-        <span class="badge bv">v9.3</span>
+        <span class="badge bv">v9.4</span>
         <span class="badge bchat">채팅 연동형</span>
         <span class="badge bnew">실매출 적용</span>
       </div>
-      <div class="sub">📅 2026-04-22 · 2021년↑ 오픈 107개점 실매출 기반 · 고정지출 44% 적용</div>
+      <div class="sub">📅 2026-10-08 · 2021년↑ 오픈 104개점 실매출 · 참조 프로파일 고정(v9.4) · 고정지출 44% 적용</div>
     </div>
   </div>
 
@@ -168,7 +168,7 @@ textarea{resize:vertical;min-height:90px;font-size:12px;font-family:'Menlo','Mon
 
       <!-- 수익 계산식 안내 -->
       <div class="formula-box">
-        <div class="formula-title">💡 수익 계산 공식 · 등급 기준 (v9.3)</div>
+        <div class="formula-title">💡 수익 계산 공식 · 등급 기준 (v9.4)</div>
         <div class="formula-text">순수익 = 예상 월매출 × 56% - 월 임대료  (고정지출 44% 자동 차감)
 C 입점불가: 500만원 미만 (메인 입지 여부 무관)
 M접두사: 메인 입지 확인 시 / 1,000만원당 A / 500만원당 +
@@ -179,6 +179,10 @@ M접두사: 메인 입지 확인 시 / 1,000만원당 A / 500만원당 +
         <label>분석 주소 * <span style="font-weight:400;color:#999">(층수 포함 기재 시 자동 반영)</span></label>
         <input id="iAddr" type="text" placeholder="예: 경기도 수원시 팔달구 인계로 123, 4층" oninput="parseFloorFromAddr()">
         <div id="floorDetected" style="display:none;margin-top:4px;font-size:11px;color:#185FA5;background:rgba(55,138,221,.08);border:.5px solid rgba(55,138,221,.25);border-radius:6px;padding:4px 10px"></div>
+      </div>
+      <div class="fg">
+        <label>층수 * <span style="font-weight:400;color:#999">(주소에 층수가 있으면 자동 입력 · 층수 보정이 매출에 직접 반영됨)</span></label>
+        <input id="iFloor" type="text" placeholder="예: 4층 / 지하1층" oninput="parseFloorFromAddr()">
       </div>
       <div class="row2">
         <div class="fg">
@@ -253,6 +257,218 @@ var STORES_107=[{"name":"속초본점","area":52,"sales":9502391,"lat":38.189686
 
 var STORE_STR_107=STORES_107.map(function(s){return s.name+'('+s.area+'평,₩'+Math.round(s.sales/10000)+'만)'}).join(', ');
 
+// ══════════════════════════════════════════════════════════════
+// v9.4 신규 — 객관 프로파일 엔진
+//  · 참조매장 104곳 프로파일은 2026-10-08 카카오 API로 일괄 계산해 고정(REF_PROFILES)
+//  · 분석지 프로파일도 같은 규칙으로 계산 → 누가 돌려도 같은 후보·같은 가중치
+// ══════════════════════════════════════════════════════════════
+var REF_PROFILES_DATE = '2026-10-08';
+var REF_PROFILES = [{"n":"속초본점","t":"지방중소도시","rg":"강원특별자치도 속초시","cin":["메가박스 속초"],"sch":1,"ac":18,"act":31,"apt":5,"sub":"","uni":0,"d":83},{"n":"삼척점","t":"지방중소도시","rg":"강원특별자치도 삼척시","cin":[],"sch":3,"ac":6,"act":20,"apt":12,"sub":"","uni":0,"d":243},{"n":"서현역점","t":"수도권대도시","rg":"경기도 성남시 분당구","cin":["메가박스 분당","CGV 서현"],"sch":6,"ac":44,"act":95,"apt":5,"sub":"서현역 수인분당선","uni":0,"d":297},{"n":"평내호평역점","t":"수도권대도시","rg":"경기도 남양주시","cin":["메가박스 남양주"],"sch":5,"ac":28,"act":53,"apt":10,"sub":"평내호평역 경춘선","uni":0,"d":303},{"n":"아주대점","t":"수도권대도시","rg":"경기도 수원시 팔달구","cin":[],"sch":4,"ac":15,"act":36,"apt":10,"sub":"","uni":2,"d":214},{"n":"평택소사벌점","t":"수도권대도시","rg":"경기도 평택시","cin":["CGV 평택소사"],"sch":3,"ac":10,"act":35,"apt":7,"sub":"","uni":0,"d":295},{"n":"정자역점","t":"수도권대도시","rg":"경기도 성남시 분당구","cin":[],"sch":6,"ac":57,"act":150,"apt":8,"sub":"정자역 수인분당선","uni":0,"d":283},{"n":"다산역점","t":"수도권대도시","rg":"경기도 남양주시","cin":[],"sch":3,"ac":136,"act":255,"apt":5,"sub":"다산역 8호선","uni":0,"d":224},{"n":"의정부본점","t":"수도권대도시","rg":"경기도 의정부시","cin":["CGV 의정부"],"sch":0,"ac":4,"act":60,"apt":16,"sub":"의정부역 1호선","uni":0,"d":531},{"n":"모란역점","t":"수도권대도시","rg":"경기도 성남시 중원구","cin":["메가박스 성남모란","네오시네마"],"sch":3,"ac":6,"act":36,"apt":22,"sub":"모란역 수인분당선","uni":0,"d":456},{"n":"수원성대점","t":"수도권대도시","rg":"경기도 수원시 장안구","cin":[],"sch":2,"ac":18,"act":41,"apt":8,"sub":"성균관대역 1호선","uni":1,"d":272},{"n":"수원인계점","t":"수도권대도시","rg":"경기도 수원시 팔달구","cin":["CGV 동수원","메가박스 수원인계"],"sch":2,"ac":9,"act":49,"apt":4,"sub":"수원시청역 수인분당선","uni":0,"d":459},{"n":"광명역점","t":"수도권대도시","rg":"경기도 광명시","cin":["메가박스 광명AK플라자","CGV 광명역","롯데시네마 광명아울렛"],"sch":2,"ac":48,"act":72,"apt":2,"sub":"광명역 1호선","uni":0,"d":195},{"n":"일산역점","t":"수도권대도시","rg":"경기도 고양시 일산서구","cin":[],"sch":4,"ac":22,"act":40,"apt":11,"sub":"일산역 경의중앙선","uni":0,"d":126},{"n":"안양1번가점","t":"수도권대도시","rg":"경기도 안양시 만안구","cin":["롯데시네마 안양일번가"],"sch":4,"ac":26,"act":68,"apt":8,"sub":"안양역 1호선","uni":1,"d":373},{"n":"시흥은계점","t":"수도권대도시","rg":"경기도 시흥시","cin":[],"sch":4,"ac":85,"act":137,"apt":7,"sub":"","uni":0,"d":197},{"n":"구래점","t":"수도권대도시","rg":"경기도 김포시","cin":["메가박스 김포한강신도시"],"sch":3,"ac":74,"act":123,"apt":11,"sub":"구래역 김포골드라인","uni":0,"d":457},{"n":"평택역점","t":"수도권대도시","rg":"경기도 평택시","cin":["CGV 평택"],"sch":5,"ac":6,"act":41,"apt":11,"sub":"평택역 1호선","uni":0,"d":353},{"n":"광주경안점","t":"수도권대도시","rg":"경기도 광주시","cin":["CGV 경기광주"],"sch":2,"ac":28,"act":64,"apt":2,"sub":"","uni":0,"d":306},{"n":"광명하안점","t":"수도권대도시","rg":"경기도 광명시","cin":[],"sch":5,"ac":95,"act":142,"apt":6,"sub":"","uni":0,"d":206},{"n":"영통구청점","t":"수도권대도시","rg":"경기도 수원시 영통구","cin":[],"sch":6,"ac":80,"act":112,"apt":5,"sub":"","uni":0,"d":162},{"n":"송내역점","t":"수도권대도시","rg":"경기도 부천시 원미구","cin":[],"sch":6,"ac":38,"act":82,"apt":8,"sub":"송내역 1호선","uni":0,"d":239},{"n":"야당점","t":"수도권대도시","rg":"경기도 파주시","cin":["롯데시네마 파주야당"],"sch":3,"ac":16,"act":33,"apt":4,"sub":"야당역 경의중앙선","uni":0,"d":197},{"n":"동탄호수공원점","t":"수도권대도시","rg":"경기도 화성시 동탄구","cin":["CGV 동탄그랑파사쥬","안영채X모노플렉스","CGV 동탄호수공원"],"sch":8,"ac":148,"act":215,"apt":7,"sub":"","uni":0,"d":270},{"n":"이천로데오점","t":"수도권중소도시","rg":"경기도 이천시","cin":["유진텍코퍼레이션 이천","CGV 이천"],"sch":4,"ac":27,"act":63,"apt":8,"sub":"","uni":0,"d":360},{"n":"광명사거리점","t":"수도권대도시","rg":"경기도 광명시","cin":["롯데시네마 광명"],"sch":1,"ac":22,"act":53,"apt":11,"sub":"광명사거리역 7호선","uni":0,"d":298},{"n":"동탄북광장점","t":"수도권대도시","rg":"경기도 화성시 동탄구","cin":["메가박스 동탄","CGV 동탄"],"sch":3,"ac":91,"act":141,"apt":8,"sub":"","uni":0,"d":251},{"n":"여주터미널점","t":"수도권중소도시","rg":"경기도 여주시","cin":[],"sch":1,"ac":0,"act":4,"apt":4,"sub":"","uni":0,"d":21},{"n":"병점점","t":"수도권대도시","rg":"경기도 화성시 병점구","cin":["롯데시네마 병점"],"sch":5,"ac":45,"act":88,"apt":6,"sub":"","uni":0,"d":294},{"n":"김량장점","t":"수도권대도시","rg":"경기도 용인시 처인구","cin":["CGV 용인"],"sch":3,"ac":6,"act":19,"apt":14,"sub":"용인중앙시장역 에버라인","uni":0,"d":250},{"n":"시흥능곡점","t":"수도권대도시","rg":"경기도 시흥시","cin":["롯데시네마 시흥장현"],"sch":2,"ac":31,"act":63,"apt":7,"sub":"시흥능곡역 서해선","uni":0,"d":175},{"n":"안성아양지구점","t":"수도권중소도시","rg":"경기도 안성시","cin":[],"sch":1,"ac":1,"act":2,"apt":0,"sub":"","uni":0,"d":2},{"n":"하남미사점","t":"수도권대도시","rg":"경기도 하남시","cin":["메가박스 미사강변"],"sch":6,"ac":65,"act":140,"apt":7,"sub":"미사역 5호선","uni":0,"d":539},{"n":"일산라페스타점","t":"수도권대도시","rg":"경기도 고양시 일산동구","cin":["롯데시네마 라페스타"],"sch":1,"ac":3,"act":40,"apt":6,"sub":"","uni":0,"d":367},{"n":"부천옥길점","t":"수도권대도시","rg":"경기도 부천시 소사구","cin":[],"sch":5,"ac":122,"act":167,"apt":7,"sub":"","uni":0,"d":181},{"n":"안산호수점","t":"수도권대도시","rg":"경기도 안산시 단원구","cin":["롯데시네마 안산고잔","CGV 안산"],"sch":4,"ac":151,"act":194,"apt":6,"sub":"","uni":0,"d":479},{"n":"동탄목동점","t":"수도권대도시","rg":"경기도 화성시 동탄구","cin":[],"sch":2,"ac":94,"act":117,"apt":6,"sub":"","uni":0,"d":182},{"n":"용인외대점","t":"수도권대도시","rg":"경기도 용인시 처인구","cin":[],"sch":0,"ac":4,"act":13,"apt":2,"sub":"","uni":0,"d":93},{"n":"보정동카페거리점","t":"수도권대도시","rg":"경기도 용인시 기흥구","cin":[],"sch":3,"ac":72,"act":124,"apt":4,"sub":"죽전역 수인분당선","uni":0,"d":213},{"n":"장기점","t":"수도권대도시","rg":"경기도 김포시","cin":[],"sch":6,"ac":73,"act":122,"apt":5,"sub":"장기역 김포골드라인","uni":0,"d":197},{"n":"수지구청점","t":"수도권대도시","rg":"경기도 용인시 수지구","cin":[],"sch":3,"ac":148,"act":238,"apt":7,"sub":"수지구청역 신분당선","uni":0,"d":288},{"n":"파주금촌점","t":"수도권대도시","rg":"경기도 파주시","cin":[],"sch":1,"ac":26,"act":59,"apt":6,"sub":"금릉역 경의중앙선","uni":0,"d":121},{"n":"오산초평점","t":"수도권중소도시","rg":"경기도 오산시","cin":[],"sch":2,"ac":13,"act":22,"apt":8,"sub":"","uni":0,"d":42},{"n":"광주태전점","t":"수도권중소도시","rg":"경기도 안성시","cin":[],"sch":5,"ac":26,"act":56,"apt":7,"sub":"","uni":1,"d":250},{"n":"기흥구청점","t":"수도권대도시","rg":"경기도 용인시 기흥구","cin":["CGV 용인기흥"],"sch":3,"ac":48,"act":80,"apt":6,"sub":"","uni":0,"d":188},{"n":"구리갈매점","t":"수도권중소도시","rg":"경기도 구리시","cin":[],"sch":3,"ac":48,"act":77,"apt":6,"sub":"갈매역 경춘선","uni":0,"d":194},{"n":"신중동역점","t":"수도권대도시","rg":"경기도 부천시 원미구","cin":["롯데시네마 부천"],"sch":8,"ac":98,"act":176,"apt":8,"sub":"신중동역 7호선","uni":0,"d":436},{"n":"마석점","t":"수도권대도시","rg":"경기도 남양주시","cin":[],"sch":3,"ac":36,"act":60,"apt":6,"sub":"","uni":0,"d":163},{"n":"별내점","t":"수도권대도시","rg":"경기도 남양주시","cin":["롯데시네마 별내"],"sch":3,"ac":15,"act":29,"apt":7,"sub":"별내역 8호선","uni":0,"d":169},{"n":"진주본점","t":"지방중소도시","rg":"경상남도 진주시","cin":[],"sch":1,"ac":10,"act":23,"apt":6,"sub":"","uni":2,"d":147},{"n":"창원상남사거리점","t":"지방대도시","rg":"경상남도 창원시 성산구","cin":["CGV 창원상남"],"sch":7,"ac":66,"act":103,"apt":2,"sub":"","uni":0,"d":492},{"n":"거제본점","t":"지방중소도시","rg":"경상남도 거제시","cin":[],"sch":2,"ac":2,"act":26,"apt":11,"sub":"","uni":0,"d":220},{"n":"구미구평점","t":"지방중소도시","rg":"경상북도 구미시","cin":[],"sch":2,"ac":34,"act":52,"apt":6,"sub":"","uni":0,"d":126},{"n":"영주본점","t":"지방중소도시","rg":"경상북도 영주시","cin":[],"sch":0,"ac":13,"act":23,"apt":4,"sub":"","uni":0,"d":9},{"n":"광장코아점","t":"지방광역시","rg":"대구광역시 달서구","cin":["롯데시네마 대구광장"],"sch":8,"ac":12,"act":46,"apt":11,"sub":"감삼역 대구2호선","uni":0,"d":236},{"n":"죽전네거리점","t":"지방광역시","rg":"대구광역시 달서구","cin":["CGV 대구죽전"],"sch":2,"ac":14,"act":25,"apt":16,"sub":"죽전역 대구2호선","uni":0,"d":171},{"n":"대구성서점","t":"지방광역시","rg":"대구광역시 달서구","cin":["롯데시네마 성서"],"sch":6,"ac":108,"act":147,"apt":8,"sub":"성서산업단지역 대구2호선","uni":0,"d":129},{"n":"동성로중앙점","t":"지방광역시","rg":"대구광역시 중구","cin":["롯데시네마 동성로","CGV 대구한일"],"sch":3,"ac":45,"act":156,"apt":7,"sub":"반월당역 대구2호선","uni":2,"d":527},{"n":"대전둔산본점","t":"지방광역시","rg":"대전광역시 서구","cin":["롯데시네마 대전센트럴"],"sch":5,"ac":20,"act":88,"apt":19,"sub":"","uni":0,"d":335},{"n":"대전은행점","t":"지방광역시","rg":"대전광역시 중구","cin":["대전아트시네마"],"sch":4,"ac":3,"act":62,"apt":1,"sub":"중앙로역 대전1호선","uni":0,"d":305},{"n":"홍대입구역점","t":"서울","rg":"서울특별시 마포구","cin":["롯데시네마 홍대입구","인디스페이스","CGV 연남"],"sch":2,"ac":34,"act":217,"apt":14,"sub":"홍대입구역 2호선","uni":1,"d":541},{"n":"오목교점","t":"서울","rg":"서울특별시 양천구","cin":["메가박스 더부티크 목동현대백화점","메가박스 목동"],"sch":5,"ac":110,"act":215,"apt":16,"sub":"오목교역 5호선","uni":0,"d":268},{"n":"강남본점","t":"서울","rg":"서울특별시 서초구","cin":["CGV 강남","메가박스 강남"],"sch":3,"ac":90,"act":224,"apt":11,"sub":"강남역 2호선","uni":0,"d":434},{"n":"서울대입구역점","t":"서울","rg":"서울특별시 관악구","cin":["롯데시네마 서울대입구"],"sch":5,"ac":26,"act":69,"apt":26,"sub":"서울대입구역 2호선","uni":0,"d":456},{"n":"사당역점","t":"서울","rg":"서울특별시 서초구","cin":[],"sch":4,"ac":23,"act":93,"apt":21,"sub":"사당역 4호선","uni":0,"d":490},{"n":"천호로데오점","t":"서울","rg":"서울특별시 강동구","cin":["롯데시네마 강동"],"sch":4,"ac":7,"act":55,"apt":16,"sub":"천호역 5호선","uni":0,"d":437},{"n":"이대점","t":"서울","rg":"서울특별시 서대문구","cin":["아트하우스모모"],"sch":9,"ac":10,"act":59,"apt":11,"sub":"이대역 2호선","uni":5,"d":301},{"n":"이수역점","t":"서울","rg":"서울특별시 동작구","cin":["아트나인","메가박스 이수"],"sch":5,"ac":79,"act":148,"apt":20,"sub":"총신대입구역 4호선","uni":0,"d":409},{"n":"망원역점","t":"서울","rg":"서울특별시 마포구","cin":[],"sch":3,"ac":26,"act":69,"apt":35,"sub":"망원역 6호선","uni":0,"d":327},{"n":"고척점","t":"서울","rg":"서울특별시 구로구","cin":[],"sch":5,"ac":21,"act":38,"apt":9,"sub":"","uni":0,"d":129},{"n":"화곡역점","t":"서울","rg":"서울특별시 강서구","cin":["메가박스 화곡"],"sch":5,"ac":22,"act":67,"apt":27,"sub":"화곡역 5호선","uni":0,"d":184},{"n":"신림점","t":"서울","rg":"서울특별시 관악구","cin":["롯데시네마 신림"],"sch":6,"ac":6,"act":43,"apt":12,"sub":"신림역 신림선","uni":1,"d":477},{"n":"명지대점","t":"서울","rg":"서울특별시 서대문구","cin":[],"sch":5,"ac":29,"act":59,"apt":8,"sub":"","uni":1,"d":216},{"n":"방이점","t":"서울","rg":"서울특별시 송파구","cin":["롯데시네마 월드타워"],"sch":2,"ac":16,"act":37,"apt":19,"sub":"잠실역 8호선","uni":0,"d":478},{"n":"성수점","t":"서울","rg":"서울특별시 성동구","cin":[],"sch":4,"ac":4,"act":20,"apt":7,"sub":"성수역 2호선","uni":0,"d":259},{"n":"고대점","t":"서울","rg":"서울특별시 성북구","cin":[],"sch":6,"ac":13,"act":28,"apt":4,"sub":"안암역 6호선","uni":2,"d":310},{"n":"노원상계점","t":"서울","rg":"서울특별시 노원구","cin":["롯데시네마 노원","더숲아트시네마"],"sch":8,"ac":34,"act":153,"apt":8,"sub":"노원역 4호선","uni":1,"d":495},{"n":"수유역점","t":"서울","rg":"서울특별시 강북구","cin":["롯데시네마 수유"],"sch":2,"ac":5,"act":19,"apt":14,"sub":"수유역 4호선","uni":1,"d":465},{"n":"마포점","t":"서울","rg":"서울특별시 마포구","cin":[],"sch":6,"ac":46,"act":110,"apt":16,"sub":"마포역 5호선","uni":0,"d":373},{"n":"신도림역점","t":"서울","rg":"서울특별시 구로구","cin":["롯데시네마 신도림","씨네Q 신도림"],"sch":2,"ac":26,"act":66,"apt":8,"sub":"신도림역 1호선","uni":0,"d":115},{"n":"성신여대점","t":"서울","rg":"서울특별시 성북구","cin":["CGV 성신여대입구"],"sch":9,"ac":49,"act":130,"apt":12,"sub":"성신여대입구역 4호선","uni":1,"d":538},{"n":"명동점","t":"서울","rg":"서울특별시 중구","cin":[],"sch":0,"ac":2,"act":8,"apt":4,"sub":"명동역 4호선","uni":2,"d":321},{"n":"울산디자인거리점","t":"지방광역시","rg":"울산광역시 남구","cin":["CGV 울산삼산","롯데시네마 울산"],"sch":4,"ac":41,"act":74,"apt":9,"sub":"","uni":0,"d":267},{"n":"울산호계점","t":"지방광역시","rg":"울산광역시 북구","cin":[],"sch":5,"ac":6,"act":19,"apt":11,"sub":"","uni":0,"d":52},{"n":"송도트리플스트리트점","t":"수도권대도시","rg":"인천광역시 연수구","cin":["메가박스 송도"],"sch":3,"ac":2,"act":5,"apt":0,"sub":"","uni":11,"d":163},{"n":"인하대역점","t":"수도권대도시","rg":"인천광역시 미추홀구","cin":["CGV 인천학익"],"sch":3,"ac":41,"act":58,"apt":3,"sub":"인하대역 수인분당선","uni":1,"d":140},{"n":"인천검단신도시점","t":"수도권대도시","rg":"인천광역시 검단구","cin":["롯데시네마 검단아라"],"sch":4,"ac":121,"act":226,"apt":6,"sub":"아라역 인천1호선","uni":0,"d":266},{"n":"인천논현점","t":"수도권대도시","rg":"인천광역시 남동구","cin":[],"sch":4,"ac":73,"act":150,"apt":5,"sub":"인천논현역 수인분당선","uni":0,"d":245},{"n":"구월로데오점","t":"수도권대도시","rg":"인천광역시 남동구","cin":["롯데시네마 인천터미널"],"sch":5,"ac":2,"act":31,"apt":12,"sub":"인천터미널역 인천1호선","uni":1,"d":423},{"n":"월미도점","t":"수도권대도시","rg":"인천광역시 제물포구","cin":[],"sch":0,"ac":0,"act":0,"apt":0,"sub":"","uni":0,"d":61},{"n":"송도타임스페이스점","t":"수도권대도시","rg":"인천광역시 연수구","cin":["CGV 송도타임스페이스"],"sch":2,"ac":19,"act":31,"apt":3,"sub":"인천대입구역 인천1호선","uni":0,"d":268},{"n":"부평역점","t":"수도권대도시","rg":"인천광역시 부평구","cin":["부평 대한극장","롯데시네마 부평역사"],"sch":4,"ac":12,"act":79,"apt":27,"sub":"부평역 인천1호선","uni":0,"d":563},{"n":"영종하늘도시점","t":"수도권대도시","rg":"인천광역시 영종구","cin":["메가박스 영종하늘도시"],"sch":0,"ac":80,"act":150,"apt":4,"sub":"","uni":0,"d":240},{"n":"광양본점","t":"지방중소도시","rg":"전남광주통합특별시 광양시","cin":[],"sch":0,"ac":0,"act":0,"apt":0,"sub":"","uni":0,"d":0},{"n":"광주본점","t":"지방중소도시","rg":"전남광주통합특별시 북구","cin":[],"sch":4,"ac":7,"act":15,"apt":11,"sub":"","uni":0,"d":17},{"n":"전북대점","t":"지방대도시","rg":"전북특별자치도 전주시 덕진구","cin":[],"sch":2,"ac":5,"act":25,"apt":5,"sub":"","uni":1,"d":302},{"n":"군산수송점","t":"지방중소도시","rg":"전북특별자치도 군산시","cin":[],"sch":3,"ac":59,"act":106,"apt":8,"sub":"","uni":0,"d":221},{"n":"제주삼화점","t":"지방중소도시","rg":"제주특별자치도 제주시","cin":[],"sch":2,"ac":51,"act":70,"apt":6,"sub":"","uni":0,"d":84},{"n":"천안터미널점","t":"지방대도시","rg":"충청남도 천안시 동남구","cin":["CGV 천안터미널"],"sch":5,"ac":24,"act":84,"apt":8,"sub":"","uni":0,"d":343},{"n":"신불당점","t":"지방대도시","rg":"충청남도 천안시 서북구","cin":["롯데시네마 천안불당"],"sch":2,"ac":161,"act":259,"apt":7,"sub":"","uni":0,"d":240},{"n":"천안두정점","t":"지방대도시","rg":"충청남도 천안시 서북구","cin":[],"sch":5,"ac":24,"act":56,"apt":5,"sub":"","uni":0,"d":320},{"n":"아산탕정점","t":"지방중소도시","rg":"충청남도 아산시","cin":[],"sch":2,"ac":62,"act":111,"apt":6,"sub":"탕정역 1호선","uni":0,"d":122},{"n":"청주동남지구점","t":"지방대도시","rg":"충청북도 청주시 상당구","cin":[],"sch":4,"ac":69,"act":97,"apt":7,"sub":"","uni":0,"d":218},{"n":"청주지웰시티점","t":"지방대도시","rg":"충청북도 청주시 흥덕구","cin":["CGV 청주지웰시티"],"sch":1,"ac":46,"act":90,"apt":5,"sub":"","uni":0,"d":23}];
+var SITE_PROFILE = null;   // 분석지 객관 프로파일(generatePrompt·renderResult 참조)
+var LAST_CTX = null;       // 프롬프트 생성 시점의 계산 맥락(결과 재계산용)
+
+// 판정 기준(104곳 4분위수 기반)
+var PROFILE_RULES = {
+  teenAcadMin: 3,                       // 중고생 대상 학원 추정 3곳↑ = 학원 기반 있음
+  aptTier: function(n){ return n<=4?'소':(n<=10?'중':'대'); },          // 500m 내 아파트 단지 수
+  densTier: function(d){ return d<150?'하':(d<=350?'중':'상'); }        // 300m 내 음식점+카페 수
+};
+var WEIGHT_BY_MATCH = {7:0.97, 6:0.90, 5:0.77, 4:0.62, 3:0.47};          // 7항목 대조표 고정값
+var TIER_LIST = ['서울','수도권대도시','수도권중소도시','지방광역시','지방대도시','지방중소도시'];
+
+var STU_CAT = /어학원|영어학원|수학학원|입시|보습|논술|과학학원|국어학원|교과|단과/;
+var NON_CAT = /음악|미술|실용음악|댄스|무용|요가|필라테스|운전|컴퓨터|자격|공무원|고시|직업|요리|바둑|태권도|체육|스포츠|웅변|서예|발레|연기|뷰티|미용|플라워|드론/;
+var STU_NM  = /수학|영어|국어|과학|입시|보습|교습소|논술|스파르타|공부|관리형|종합학원|에듀|입시/;
+var NON_NM  = /댄스|필라테스|요가|운전|실용음악|피아노|미술|발레|태권|주짓수|복싱|공무원|자격증|컴퓨터|코딩|드럼|기타|보컬|뮤직/;
+function isStudentAcad(d){
+  var c=d.category_name||'', n=d.place_name||'';
+  if(NON_CAT.test(c)||NON_NM.test(n)) return false;
+  if(STU_CAT.test(c)) return true;
+  return STU_NM.test(n);
+}
+function normApt(n){
+  n=(n||'').replace(/\s+/g,'');
+  return n.replace(/(상가|관리사무소|관리동|후문|정문|입구|주차장|\d+동|\d+단지상가)$/,'');
+}
+var BIG_METRO = '수원시 성남시 고양시 용인시 부천시 안산시 안양시 남양주시 화성시 평택시 의정부시 시흥시 파주시 김포시 광명시 하남시 광주시'.split(' ');
+var LOCAL_BIG = '창원시 청주시 천안시 전주시 김해시 포항시'.split(' ');
+function cityTier(r1, r2){
+  var city=(r2||'').split(' ')[0];
+  if(/^서울/.test(r1)) return '서울';
+  if(/^인천/.test(r1)) return '수도권대도시';
+  if(/^경기/.test(r1)) return BIG_METRO.indexOf(city)!==-1?'수도권대도시':'수도권중소도시';
+  if(/^(부산|대구|대전|광주광역|울산)/.test(r1)) return '지방광역시';
+  return LOCAL_BIG.indexOf(city)!==-1?'지방대도시':'지방중소도시';
+}
+
+function kakaoGet(path, params, key){
+  var qs=Object.keys(params).map(function(k){return k+'='+encodeURIComponent(params[k]);}).join('&');
+  return fetch('https://dapi.kakao.com'+path+'?'+qs,{headers:{'Authorization':'KakaoAK '+key}})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+}
+function kakaoPaged(path, params, key, maxPage){
+  maxPage=maxPage||3;
+  function go(page, acc){
+    var p={}; for(var k in params) p[k]=params[k]; p.page=page;
+    return kakaoGet(path,p,key).then(function(d){
+      var docs=acc.concat(d.documents||[]); var m=d.meta||{};
+      if(!m.is_end && page<maxPage) return go(page+1, docs);
+      return {docs:docs, total:m.total_count||docs.length};
+    });
+  }
+  return go(1,[]);
+}
+function catParams(code,lat,lon,r){ return {category_group_code:code,x:lon,y:lat,radius:r,sort:'distance'}; }
+
+// 분석지 객관 프로파일 계산 — REF_PROFILES 계산 로직과 동일 규칙
+function computeSiteProfile(lat, lon, key){
+  var C='/v2/local/search/category.json', K='/v2/local/search/keyword.json';
+  var jobs = {
+    cin: kakaoGet(C, catParams('CT1',lat,lon,500), key),
+    sc:  kakaoPaged(C, catParams('SC4',lat,lon,1000), key),
+    ac:  kakaoPaged(C, catParams('AC5',lat,lon,500), key),
+    apt: kakaoPaged(K, {query:'아파트',x:lon,y:lat,radius:500,sort:'distance'}, key),
+    sw:  kakaoGet(C, catParams('SW8',lat,lon,500), key),
+    fd:  kakaoGet(C, catParams('FD6',lat,lon,300), key),
+    ce:  kakaoGet(C, catParams('CE7',lat,lon,300), key),
+    rg:  kakaoGet('/v2/local/geo/coord2regioncode.json', {x:lon,y:lat}, key)
+  };
+  var names=Object.keys(jobs);
+  return Promise.all(names.map(function(n){return jobs[n];})).then(function(arr){
+    var R={}; names.forEach(function(n,i){R[n]=arr[i];});
+    var cinAll=(R.cin.documents||[]).filter(function(x){return (x.category_name||'').indexOf('영화관')!==-1;});
+    var closedRe=/휴관|폐관|폐업|임시휴업/;
+    var cinOpen=cinAll.filter(function(x){return !closedRe.test(x.place_name);});
+    var cinClosed=cinAll.filter(function(x){return closedRe.test(x.place_name);});
+    var sch=R.sc.docs.filter(function(x){return /> (중학교|고등학교)$/.test(x.category_name||'') && x.place_name.indexOf('방송통신')===-1;});
+    var uni=R.sc.docs.filter(function(x){return /> 대학교$/.test(x.category_name||'');});
+    var stu=R.ac.docs.filter(isStudentAcad);
+    var nonStu=R.ac.docs.filter(function(x){return !isStudentAcad(x);});
+    var est=R.ac.docs.length?Math.floor(stu.length/R.ac.docs.length*R.ac.total+0.5):0;
+    var aptMap={}; var aptList=[];
+    R.apt.docs.forEach(function(x){
+      if((x.category_name||'').indexOf('주거시설 > 아파트')===-1) return;
+      var k=normApt(x.place_name); if(aptMap[k]!==undefined) return;
+      aptMap[k]=parseInt(x.distance,10); aptList.push({name:k,distance_m:aptMap[k]});
+    });
+    aptList.sort(function(a,b){return a.distance_m-b.distance_m;});
+    var rg=(R.rg.documents||[])[0]||{};
+    var sw=(R.sw.documents||[]);
+    var p={
+      cinema: cinOpen.map(function(x){return {name:x.place_name,distance_m:parseInt(x.distance,10)};}),
+      cinemaClosed: cinClosed.map(function(x){return x.place_name;}),
+      schools: sch.map(function(x){return {name:x.place_name,distance_m:parseInt(x.distance,10)};}),
+      school_n: sch.length, univ_n: uni.length,
+      univ: uni.slice(0,2).map(function(x){return x.place_name;}),
+      acad_total: R.ac.total, acad_sampled: R.ac.docs.length, acad_student_sample: stu.length, acad_student_est: est,
+      acad_examples: stu.slice(0,5).map(function(x){return x.place_name+'('+x.distance+'m)';}),
+      acad_non_examples: nonStu.slice(0,4).map(function(x){return x.place_name;}),
+      apt_n: aptList.length, apts: aptList.slice(0,6),
+      subway: sw.slice(0,2).map(function(x){return {name:x.place_name,distance_m:parseInt(x.distance,10)};}),
+      dens: ((R.fd.meta||{}).total_count||0)+((R.ce.meta||{}).total_count||0),
+      region: (rg.region_1depth_name||'')+' '+(rg.region_2depth_name||''),
+      tier: cityTier(rg.region_1depth_name||'', rg.region_2depth_name||'')
+    };
+    return p;
+  });
+}
+
+// 프로파일 → 대조 항목(②~⑦ 객관 6개)
+function deriveItems(p){
+  var teenSchool = (p.school_n||p.sch||0)>=1;
+  var teenAcad = (p.acad_student_est!==undefined?p.acad_student_est:p.ac)>=PROFILE_RULES.teenAcadMin;
+  var aptN = p.apt_n!==undefined?p.apt_n:p.apt;
+  var dens = p.dens!==undefined?p.dens:p.d;
+  var cin = p.cinema!==undefined?(p.cinema.length>0):((p.cin||[]).length>0);
+  var sub = p.subway!==undefined?(p.subway.length>0):!!p.sub;
+  return {
+    cinema: cin?'있음':'없음',
+    teen: (teenSchool&&teenAcad)?'둘다있음':((teenSchool||teenAcad)?'하나만':'둘다없음'),
+    subway: sub?'있음':'없음',
+    tier: p.tier||p.t,
+    back: PROFILE_RULES.aptTier(aptN),
+    dens: PROFILE_RULES.densTier(dens),
+    _apt: aptN, _dens: dens, _acad: (p.acad_student_est!==undefined?p.acad_student_est:p.ac)
+  };
+}
+var ITEM_LABELS = [['cinema','②영화관'],['teen','③중고생'],['subway','④지하철역'],['tier','⑤도시위계'],['back','⑥배후지(단지수)'],['dens','⑦상업밀도']];
+function levelGap(a,b){ var m={'소':0,'중':1,'대':2,'하':0,'상':2}; return Math.abs((m[a]||0)-(m[b]||0)); }
+
+function rankCandidates(siteItems, topN){
+  topN=topN||10;
+  var byName={}; STORES_107.forEach(function(s){byName[s.name]=s;});
+  var list=REF_PROFILES.map(function(rp){
+    var it=deriveItems(rp); var s=byName[rp.n]; if(!s) return null;
+    var match=0, detail=[];
+    ITEM_LABELS.forEach(function(L){ var ok=it[L[0]]===siteItems[L[0]]; if(ok) match++; detail.push(L[1]+(ok?'○':'×')); });
+    var lr=function(a,b){return Math.abs(Math.log((a+1)/(b+1)));};
+    var close=lr(it._dens,siteItems._dens)+lr(it._apt,siteItems._apt)+0.5*lr(it._acad,siteItems._acad);
+    var cap2 = levelGap(it.back,siteItems.back)>=2 || levelGap(it.dens,siteItems.dens)>=2;
+    return {name:rp.n, area:s.area, sales:s.sales, items:it, match:match, detail:detail.join(' '), close:close, cap2:cap2, rp:rp};
+  }).filter(Boolean);
+  list.sort(function(a,b){ return (b.match-a.match) || (a.close-b.close); });
+  return list.slice(0,topN);
+}
+
+function areaAdjust(sales, refArea, area){
+  var ratio=area/refArea;
+  if(Math.abs(ratio-1)<=0.10) return Math.round(sales);
+  return Math.round(sales*Math.pow(ratio,0.85));
+}
+
+// 결과 JSON → 위젯 결정적 재계산
+function recomputeFromRefs(r){
+  var out={ok:false, warnings:[], rows:[], base:null, adjusted:null};
+  var byName={}; STORES_107.forEach(function(s){byName[s.name]=s;});
+  var area=parseFloat(r.area)||(LAST_CTX&&LAST_CTX.area)||0;
+  var cand={}; if(LAST_CTX&&LAST_CTX.candidates){ LAST_CTX.candidates.forEach(function(c,i){cand[c.name]=c; c.rank=i;}); }
+  var hasCtx = LAST_CTX && LAST_CTX.candidates && LAST_CTX.candidates.length>0;
+  (r.reference_stores||[]).forEach(function(rs){
+    var s=byName[rs.name];
+    if(!s){ out.warnings.push('참조매장 "'+rs.name+'"은(는) 실매출 데이터에 없음 → 계산 제외'); return; }
+    var row={name:rs.name, area:s.area, sales:s.sales, adj:areaAdjust(s.sales,s.area,area), flags:[], rank:out.rows.length};
+    if(rs.avg_monthly_sales && Math.abs(rs.avg_monthly_sales-s.sales)>s.sales*0.02) row.flags.push('원매출 값을 실데이터로 교정');
+    if(hasCtx){
+      var c=cand[rs.name];
+      if(!c){ row.flags.push('위젯 후보 목록 밖 매장 → 제외'); row.weight=0; out.rows.push(row); return; }
+      var typeOk = rs.type_match===true;
+      if(rs.type_match===undefined) row.flags.push('type_match 누락 → 불일치로 간주');
+      var n=c.match+(typeOk?1:0);
+      var w=WEIGHT_BY_MATCH[n]||0;
+      if(!typeOk) w=Math.min(w,0.5);
+      if(c.cap2) w=Math.min(w,0.5);
+      if(rs.spend_gap2===true) w=Math.min(w,0.5);
+      row.n=n; row.weight=w; row.typeOk=typeOk; row.rank=c.rank; row.detail=c.detail+(typeOk?' ①상권유형○':' ①상권유형×');
+      if(rs.similarity_weight!==undefined && Math.abs(rs.similarity_weight-w)>0.011) row.flags.push('가중치 '+rs.similarity_weight+' → 위젯기준 '+w);
+    } else {
+      // 맥락 없이 결과만 붙여넣은 경우: 사유의 'N개 일치'와 가중치 범위만 검증
+      var m=(rs.similarity_reason||'').match(/(\d)\s*개\s*중?\s*(\d)\s*개/);
+      var w2=parseFloat(rs.similarity_weight)||0;
+      if(m){ var nn=parseInt(m[2],10); var lo={7:0.95,6:0.85,5:0.70,4:0.55,3:0.40}[nn]||0, hi={7:1.0,6:0.94,5:0.84,4:0.69,3:0.54}[nn]||0.39;
+        if(w2>hi||w2<lo){ row.flags.push('사유('+nn+'개 일치)와 가중치 '+w2+' 불일치 → '+Math.min(Math.max(w2,lo),hi)+'로 보정'); w2=Math.min(Math.max(w2,lo),hi); } }
+      else row.flags.push('사유에 일치 개수 표기 없음');
+      row.weight=w2;
+    }
+    out.rows.push(row);
+  });
+  var used=out.rows.filter(function(x){return x.weight>=0.4;})
+    .sort(function(a,b){ return (b.weight-a.weight) || (a.rank-b.rank); }).slice(0,5);  // 동점은 후보 순위 우선
+  out.rows.forEach(function(x){ x.used = used.indexOf(x)!==-1; });
+  if(used.length===0){ out.warnings.push('가중치 0.4 이상 참조매장이 없어 재계산 불가 — 모델 수치를 그대로 표시'); return out; }
+  var sw=0, s=0; used.forEach(function(x){ sw+=x.weight; s+=x.adj*x.weight; });
+  out.base=Math.round(s/sw);
+  var strong=used.filter(function(x){return x.weight>=0.55;}).length;
+  if(strong<3) out.warnings.push('가중치 0.55 이상 참조매장 '+strong+'곳 → 참조매장 부족으로 추정 신뢰도 낮음');
+  var fp = (LAST_CTX&&LAST_CTX.fp) || parseFloat(r.floor_penalty) || 1;
+  var bp = (LAST_CTX&&LAST_CTX.bp) || (r.brand_impact&&parseFloat(r.brand_impact.brand_penalty)) || 1;
+  var lp = r.is_main_location===true ? 1.05 : ([0.95,0.90,1.0].indexOf(parseFloat(r.location_penalty))!==-1?parseFloat(r.location_penalty):1.0);
+  if(r.is_main_location===true && parseFloat(r.location_penalty)!==1.05) out.warnings.push('메인 입지인데 location_penalty가 '+r.location_penalty+' → 1.05로 교정');
+  out.fp=fp; out.bp=bp; out.lp=lp;
+  out.adjusted=Math.round(out.base*fp*bp*lp);
+  out.ok=true;
+  return out;
+}
+
 // ── 유틸 ─────────────────────────────────────────────
 function fmt(n){if(!n&&n!==0)return'-';return Number(n).toLocaleString('ko-KR')+'원';}
 function $(id){return document.getElementById(id);}
@@ -283,42 +499,40 @@ var KAKAO_DEFAULT_KEY = 'd416bc5280b92ffd709bc7ff889c0640';
 var KAKAO_VERIFY_RESULT = null; // generatePrompt에서 참조
 
 var KAKAO_VERIFY_CATEGORIES = [
-  {label:'올리브영', query:'올리브영', group:'일반시설'},
-  {label:'맥도날드', query:'맥도날드', group:'일반시설'},
-  {label:'롯데리아', query:'롯데리아', group:'일반시설'},
-  {label:'버거킹', query:'버거킹', group:'일반시설'},
-  {label:'CGV', query:'CGV', group:'일반시설'},
-  {label:'메가박스', query:'메가박스', group:'일반시설'},
-  {label:'롯데시네마', query:'롯데시네마', group:'일반시설'},
-  {label:'스타벅스', query:'스타벅스', group:'일반시설'},
-  {label:'중학교', query:'중학교', group:'일반시설', radius:1000},
-  {label:'고등학교', query:'고등학교', group:'일반시설', radius:1000},
-  {label:'아파트', query:'아파트', group:'일반시설'},
-  {label:'학원', query:'학원', group:'일반시설'},
-  {label:'경쟁-놀숲', query:'놀숲', group:'경쟁업체', sub:'만화카페'},
-  {label:'경쟁-놀숲', query:'놀숲더레이블', group:'경쟁업체', sub:'만화카페'},
-  {label:'경쟁-캣툰', query:'캣툰', group:'경쟁업체', sub:'만화카페'},
-  {label:'경쟁-통툰', query:'통툰', group:'경쟁업체', sub:'만화카페'},
-  {label:'경쟁-원플레이', query:'원플레이', group:'경쟁업체', sub:'만화카페'},
-  {label:'경쟁-콩툰', query:'콩툰', group:'경쟁업체', sub:'만화카페'},
-  {label:'경쟁-카페데코믹스', query:'카페데코믹스', group:'경쟁업체', sub:'만화카페'},
-  {label:'경쟁-툰슐랭', query:'툰슐랭', group:'경쟁업체', sub:'만화카페'},
-  {label:'경쟁-레드버튼', query:'레드버튼', group:'경쟁업체', sub:'보드게임카페'},
-  {label:'경쟁-홈즈앤루팡', query:'홈즈앤루팡', group:'경쟁업체', sub:'보드게임카페'},
-  {label:'경쟁-히어로보드게임', query:'히어로보드게임', group:'경쟁업체', sub:'보드게임카페'},
-  {label:'경쟁-더홀릭보드게임카페', query:'더홀릭보드게임카페', group:'경쟁업체', sub:'보드게임카페'},
-  {label:'경쟁-홈즈앤루팡24', query:'홈즈앤루팡24', group:'경쟁업체', sub:'오티티카페'},
-  {label:'경쟁-오티티프라이빗', query:'오티티프라이빗', group:'경쟁업체', sub:'오티티카페'},
-  {label:'경쟁-오티티관', query:'오티티관', group:'경쟁업체', sub:'오티티카페'},
-  {label:'경쟁-오티티시네마', query:'오티티시네마', group:'경쟁업체', sub:'오티티카페'},
-  {label:'경쟁-오티티플러스', query:'오티티플러스', group:'경쟁업체', sub:'오티티카페'},
-  {label:'경쟁-오티티카페온스팟', query:'오티티카페 온스팟', group:'경쟁업체', sub:'오티티카페'},
-  {label:'경쟁-오티티프라임', query:'오티티프라임', group:'경쟁업체', sub:'오티티카페'},
-  {label:'경쟁-오티티박스', query:'오티티박스', group:'경쟁업체', sub:'오티티카페'},
-  // v9.3: 브랜드명 19개로 놓친 신규/무명 경쟁업체를 보완 포착하기 위한 카테고리 보완검색
-  {label:'경쟁-보완:만화카페', query:'만화카페', group:'경쟁업체', sub:'만화카페', isCatchAll:true},
-  {label:'경쟁-보완:보드게임카페', query:'보드게임카페', group:'경쟁업체', sub:'보드게임카페', isCatchAll:true},
-  {label:'경쟁-보완:오티티카페', query:'오티티카페', group:'경쟁업체', sub:'오티티카페', isCatchAll:true}
+  // v9.4: 프랜차이즈는 카카오 업종분류(category_name)에 브랜드명이 있어야만 인정 — 'OO점 주차장', 카셰어링 등 오탐 제거
+  {label:'올리브영', query:'올리브영', group:'일반시설', catToken:'올리브영'},
+  {label:'맥도날드', query:'맥도날드', group:'일반시설', catToken:'맥도날드'},
+  {label:'롯데리아', query:'롯데리아', group:'일반시설', catToken:'롯데리아'},
+  {label:'버거킹', query:'버거킹', group:'일반시설', catToken:'버거킹'},
+  {label:'스타벅스', query:'스타벅스', group:'일반시설', catToken:'스타벅스'},
+  // v9.4: 영화관·중고교·학원·아파트는 업종 카테고리 검색(computeSiteProfile)으로 이전 — 키워드 오탐 차단
+  // v9.4: 경쟁업체는 규칙(1km 거리검증)에 맞춰 반경 1km로 조회하고 500m 이내/500m~1km를 구분 표시
+  {label:'경쟁-놀숲', query:'놀숲', group:'경쟁업체', sub:'만화카페', radius:1000},
+  {label:'경쟁-놀숲', query:'놀숲더레이블', group:'경쟁업체', sub:'만화카페', radius:1000},
+  {label:'경쟁-캣툰', query:'캣툰', group:'경쟁업체', sub:'만화카페', radius:1000},
+  {label:'경쟁-통툰', query:'통툰', group:'경쟁업체', sub:'만화카페', radius:1000},
+  {label:'경쟁-원플레이', query:'원플레이', group:'경쟁업체', sub:'만화카페', radius:1000},
+  {label:'경쟁-콩툰', query:'콩툰', group:'경쟁업체', sub:'만화카페', radius:1000},
+  {label:'경쟁-카페데코믹스', query:'카페데코믹스', group:'경쟁업체', sub:'만화카페', radius:1000},
+  {label:'경쟁-툰슐랭', query:'툰슐랭', group:'경쟁업체', sub:'만화카페', radius:1000},
+  {label:'경쟁-레드버튼', query:'레드버튼', group:'경쟁업체', sub:'보드게임카페', radius:1000},
+  {label:'경쟁-홈즈앤루팡', query:'홈즈앤루팡', group:'경쟁업체', sub:'보드게임카페', radius:1000},
+  {label:'경쟁-히어로보드게임', query:'히어로보드게임', group:'경쟁업체', sub:'보드게임카페', radius:1000},
+  {label:'경쟁-더홀릭보드게임카페', query:'더홀릭보드게임카페', group:'경쟁업체', sub:'보드게임카페', radius:1000},
+  {label:'경쟁-홈즈앤루팡24', query:'홈즈앤루팡24', group:'경쟁업체', sub:'오티티카페', radius:1000},
+  {label:'경쟁-오티티프라이빗', query:'오티티프라이빗', group:'경쟁업체', sub:'오티티카페', radius:1000},
+  {label:'경쟁-오티티관', query:'오티티관', group:'경쟁업체', sub:'오티티카페', radius:1000},
+  {label:'경쟁-오티티시네마', query:'오티티시네마', group:'경쟁업체', sub:'오티티카페', radius:1000},
+  {label:'경쟁-오티티플러스', query:'오티티플러스', group:'경쟁업체', sub:'오티티카페', radius:1000},
+  {label:'경쟁-오티티카페온스팟', query:'오티티카페 온스팟', group:'경쟁업체', sub:'오티티카페', radius:1000},
+  {label:'경쟁-오티티프라임', query:'오티티프라임', group:'경쟁업체', sub:'오티티카페', radius:1000},
+  {label:'경쟁-오티티박스', query:'오티티박스', group:'경쟁업체', sub:'오티티카페', radius:1000},
+  // v9.4: 카테고리 보완검색 확대(만화방·보드카페 업종명 포함) — 결과는 카카오 업종분류로 자동 재분류
+  {label:'경쟁-보완:만화카페', query:'만화카페', group:'경쟁업체', sub:'만화카페', isCatchAll:true, radius:1000},
+  {label:'경쟁-보완:만화방', query:'만화방', group:'경쟁업체', sub:'만화카페', isCatchAll:true, radius:1000},
+  {label:'경쟁-보완:보드게임카페', query:'보드게임카페', group:'경쟁업체', sub:'보드게임카페', isCatchAll:true, radius:1000},
+  {label:'경쟁-보완:보드카페', query:'보드카페', group:'경쟁업체', sub:'보드게임카페', isCatchAll:true, radius:1000},
+  {label:'경쟁-보완:오티티카페', query:'오티티카페', group:'경쟁업체', sub:'오티티카페', isCatchAll:true, radius:1000}
 ];
 
 function kakaoAddressSearch(addr, key){
@@ -422,17 +636,40 @@ function kakaoKeywordSearch(query, lat, lon, key, radius){
   return fetchPage(1, []);
 }
 
+// v9.4: 카카오 업종분류로 경쟁업체 종류 판정
+function classifyCompetitor(d){
+  var c=d.category_name||'', n=d.place_name||'';
+  if(c.indexOf('만화방')!==-1) return '만화카페';
+  if(c.indexOf('보드카페')!==-1) return '보드게임카페';
+  if(/오티티|OTT/i.test(n)) return '오티티카페';
+  if(c.indexOf('북카페')!==-1 && /코믹|만화|툰/.test(n)) return '만화카페';
+  if(c.indexOf('테마카페')!==-1) return '참고:테마·룸카페';
+  return '업종불일치';
+}
 // v7.0.1: 반경 500m 15개 항목 자동 검증 (Promise 반환, UI 없이 내부 호출용)
 function silentVerify(lat, lon, key){
   var promises = KAKAO_VERIFY_CATEGORIES.map(function(cat){
     return kakaoKeywordSearch(cat.query, lat, lon, key, cat.radius)
       .then(function(docs){
-        if(cat.group === '경쟁업체'){
-          docs = docs.filter(function(d){ return d.place_name.indexOf('벌툰') === -1; });
-        }
+        // v9.4: 업종분류 기반 오탐 제거
+        var EXCL_CAT=/교통,수송|주차장|입출구|카셰어링|부동산|공간대여|식품판매|ATM/;
+        docs = docs.filter(function(d){
+          var c=d.category_name||'';
+          if(EXCL_CAT.test(c)) return false;
+          if(cat.group==='일반시설' && cat.catToken) return c.indexOf(cat.catToken)!==-1;
+          if(cat.group==='경쟁업체'){
+            if(d.place_name.indexOf('벌툰')!==-1 || c.indexOf('> 벌툰')!==-1) return false;
+            if(!cat.isCatchAll){
+              var q=cat.query.replace(/\s+/g,'');
+              return d.place_name.replace(/\s+/g,'').indexOf(q)!==-1 || c.indexOf(q)!==-1;
+            }
+          }
+          return true;
+        });
         if(docs.length > 0){
           var matches = docs.map(function(d){
-            return { name: d.place_name, distance_m: parseInt(d.distance, 10), address: d.address_name };
+            return { name: d.place_name, distance_m: parseInt(d.distance, 10), address: d.address_name,
+              category: d.category_name||'', kind: cat.group==='경쟁업체'?classifyCompetitor(d):'' };
           });
           return { category: cat.label, group: cat.group, sub: cat.sub, query: cat.query, isCatchAll: !!cat.isCatchAll,
             found: true, apiFailed: false,
@@ -479,7 +716,9 @@ function calcBrandPenalty(lat,lon){
 // ── 주소에서 층수 자동 파싱 ──────────────────────────
 function parseFloorFromAddr(){
   var addr=$('iAddr').value;
-  var floor=extractFloor(addr);
+  var floorFromAddr=extractFloor(addr);
+  if(floorFromAddr && $('iFloor') && document.activeElement!==$('iFloor')) $('iFloor').value=floorFromAddr;
+  var floor=getFloor();
   var fd=$('floorDetected');
   if(floor){
     fd.style.display='block';
@@ -491,6 +730,18 @@ function parseFloorFromAddr(){
   } else {
     fd.style.display='none';
   }
+}
+
+// v9.4: 층수는 필수 — 주소 → 층수 입력칸 순으로 확인
+function getFloor(){
+  var f=extractFloor($('iAddr').value);
+  if(f) return f;
+  var v=(($('iFloor')&&$('iFloor').value)||'').trim();
+  if(!v) return '';
+  var f2=extractFloor(v); if(f2) return f2;
+  var b=v.match(/^(?:b|지하)\s*(\d+)/i); if(b) return '지하'+b[1]+'층';
+  var n=v.match(/^(\d+)/); if(n) return n[1]+'층';
+  return '';
 }
 
 function extractFloor(addr){
@@ -527,6 +778,7 @@ function handleGeneratePrompt(){
   var checkEl = $('geocodeCheck');
 
   if(!addr || !area){ alert('주소와 평수는 필수입니다.'); return; }
+  if(!getFloor()){ alert('층수를 입력해 주세요 (예: 2층, 지하1층).\n층수 보정(지하·6층↑ 0.90 / 4~5층 0.95)이 예상매출에 직접 반영되므로 미입력 상태로는 분석하지 않습니다.'); $('iFloor').focus(); return; }
 
   btn.disabled = true;
   btn.textContent = '⏳ 좌표 확인 중...';
@@ -535,10 +787,15 @@ function handleGeneratePrompt(){
 
   silentGeocode(addr, key)
     .then(function(geo){
-      btn.textContent = '⏳ 반경 500m 상권 데이터 조회 중...';
-      return silentVerify(geo.lat, geo.lon, key);
+      btn.textContent = '⏳ 상권 데이터·객관 프로파일 조회 중...';
+      return Promise.all([
+        silentVerify(geo.lat, geo.lon, key),
+        computeSiteProfile(geo.lat, geo.lon, key).catch(function(e){ console.warn('[v9.4 프로파일 계산 실패]', e); return null; })
+      ]);
     })
-    .then(function(results){
+    .then(function(pair){
+      var results = pair[0];
+      SITE_PROFILE = pair[1];
       KAKAO_VERIFY_RESULT = results;
       // v9.3 진단: 실제 API 검증 결과를 콘솔에 그대로 출력 (누락 여부 즉시 확인 가능)
       try {
@@ -557,14 +814,23 @@ function handleGeneratePrompt(){
       var compFound = comp.filter(function(r){ return r.found; });
       var compFailed = comp.filter(function(r){ return r.apiFailed; });
       var compFoundNames = [];
+      var nonBrandComp = 0, nbSeen = [];
       compFound.forEach(function(r){
+        if(r.isCatchAll){
+          r.matches.forEach(function(m){
+            if(['만화카페','보드게임카페','오티티카페'].indexOf(m.kind)!==-1 && nbSeen.indexOf(m.name)===-1){ nbSeen.push(m.name); }
+          });
+          return;
+        }
         var nm = r.category.replace('경쟁-','');
         if(compFoundNames.indexOf(nm) === -1) compFoundNames.push(nm);
       });
-      var msg = '✅ 반경 500m 검증 완료 · 경쟁업체 ' + compFoundNames.length + '개 브랜드 확인';
+      nonBrandComp = nbSeen.length;
+      var msg = '✅ 상권 검증 완료' + (SITE_PROFILE?' · 객관 프로파일 계산 완료':' · ⚠️ 객관 프로파일 계산 실패') + ' · 경쟁 브랜드(1km) ' + compFoundNames.length + '개';
       if(compFoundNames.length > 0){
         msg += ' (' + compFoundNames.join(', ') + ')';
       }
+      msg += ' · 업종분류상 경쟁업체(비브랜드 포함) ' + nonBrandComp + '곳';
       if(compFailed.length > 0){
         msg += ' · ⚠️ API실패 ' + compFailed.length + '건(부재 아님)';
       }
@@ -575,6 +841,7 @@ function handleGeneratePrompt(){
     .catch(function(err){
       // 지오코딩/검증 실패 시에도 기존 방식(Claude 웹검색)으로 계속 진행
       KAKAO_VERIFY_RESULT = null;
+      SITE_PROFILE = null;
       checkEl.style.color = '#FF9500';
       checkEl.textContent = '⚠️ 자동 좌표 확인 실패 — Claude가 웹검색으로 직접 확인합니다. (좌표를 알고 있다면 개발자에게 문의해 직접 입력 기능을 요청하세요)';
       finishGeneratePrompt(btn);
@@ -595,8 +862,9 @@ function generatePrompt(){
   var lon=$('iLon').value.trim();
   if(!addr||!area){alert('주소와 평수는 필수입니다.');return;}
 
-  // 주소에서 층수 자동 파싱
-  var floor=extractFloor(addr);
+  // v9.4: 층수 필수(주소 또는 층수 입력칸)
+  var floor=getFloor();
+  if(!floor){alert('층수를 입력해 주세요 (예: 2층, 지하1층).');return;}
   var fp=floorPenalty(floor);
   var rentStr=rent?rent+'만원 (관리비 포함)':'미입력';
   var coordStr=(lat&&lon)?('위도 '+lat+', 경도 '+lon):'미입력 — 주소 기반 추정';
@@ -621,7 +889,8 @@ function generatePrompt(){
         : (r.found?('확인됨 · '+r.name+' · '+r.distance_m+'m'):'500m 내 없음');
       kakaoBlockStr += '  '+r.category+': '+status+'\n';
     });
-    kakaoBlockStr += '[경쟁업체 1단계 — 실제 브랜드명 19개 개별 검색, 반경 500m 기준]\n';
+    kakaoBlockStr += '  (영화관·중·고교·학원·아파트·지하철역은 아래 [위젯 객관 프로파일]에 업종분류 기반으로 표기)\n';
+    kakaoBlockStr += '[경쟁업체 1단계 — 실제 브랜드명 19개 개별 검색, 반경 1km · 카카오 업종분류로 오탐 제거]\n';
     var brandItems = g2.filter(function(r){ return !r.isCatchAll; });
     var allKnownNames = []; // 브랜드명 검색으로 이미 확인된 매장명 목록 (2단계 중복판정용)
     var shownCount = 0;
@@ -632,7 +901,7 @@ function generatePrompt(){
       shownCount += items.length;
       kakaoBlockStr += '  ['+subCat+']\n';
       if(foundItems.length === 0 && failedItems.length === 0){
-        kakaoBlockStr += '    반경 500m 내 확인된 브랜드 없음\n';
+        kakaoBlockStr += '    반경 1km 내 확인된 브랜드 없음\n';
       } else {
         var seenNames = [];
         foundItems.forEach(function(r){
@@ -640,7 +909,7 @@ function generatePrompt(){
             allKnownNames.push(m.name);
             if(seenNames.indexOf(m.name) !== -1) return;
             seenNames.push(m.name);
-            kakaoBlockStr += '    - '+r.category.replace('경쟁-','')+'('+m.name+') · '+m.distance_m+'m · '+(m.address||'')+'\n';
+            kakaoBlockStr += '    - '+r.category.replace('경쟁-','')+'('+m.name+') · '+m.distance_m+'m'+(m.distance_m<=500?'(500m 이내)':'(500m~1km)')+' · '+(m.address||'')+(m.category?' · 업종: '+m.category:'')+'\n';
           });
         });
       }
@@ -668,30 +937,141 @@ function generatePrompt(){
     // v9.3: 2단계 — 카테고리 보완검색 (브랜드명 19개로 놓친 신규/무명 경쟁업체 포착용)
     kakaoBlockStr += '[경쟁업체 2단계 — 카테고리 보완검색(만화카페/보드게임카페/오티티카페), 1단계 누락분 포착용]\n';
     var catchAllItems = g2.filter(function(r){ return r.isCatchAll; });
-    var newFindings = [];
+    var newFindings = [], seenNF = [];
     catchAllItems.forEach(function(r){
       if(!r.found) return;
       r.matches.forEach(function(m){
-        if(allKnownNames.indexOf(m.name) !== -1) return; // 이미 1단계 브랜드명 검색으로 확인된 매장은 제외(중복아님)
-        newFindings.push({ sub: r.sub, name: m.name, distance_m: m.distance_m, address: m.address, queriedAs: r.sub });
+        if(allKnownNames.indexOf(m.name) !== -1) return; // 1단계 브랜드 검색에서 이미 확인된 매장
+        if(seenNF.indexOf(m.name) !== -1) return;          // v9.4: 보완검색어 간 중복 제거
+        seenNF.push(m.name);
+        newFindings.push({ kind: m.kind, name: m.name, distance_m: m.distance_m, address: m.address, category: m.category });
       });
     });
+    newFindings.sort(function(a,b){ return a.distance_m-b.distance_m; });
+    var nfComp = newFindings.filter(function(nf){ return ['만화카페','보드게임카페','오티티카페'].indexOf(nf.kind)!==-1; });
+    var nfRef  = newFindings.filter(function(nf){ return nf.kind==='참고:테마·룸카페'; });
+    var nfOut  = newFindings.filter(function(nf){ return nf.kind==='업종불일치'; });
     if(newFindings.length === 0){
-      kakaoBlockStr += '  1단계에서 놓친 신규 업체 없음(카테고리 보완검색 결과 추가 발견 없음)\n';
+      kakaoBlockStr += '  1단계에서 놓친 신규 업체 없음(보완검색 결과 추가 발견 없음)\n';
     } else {
-      kakaoBlockStr += '  ⚠️ 아래는 1단계 브랜드명 19개에 없던 신규 발견 — 실재 여부 및 정확한 카테고리(만화카페/보드게임카페/오티티카페)를 반드시 웹검색으로 재확인할 것\n';
-      kakaoBlockStr += '  ⚠️ 카카오 카테고리 태그가 틀릴 수 있음(예: 실제로는 보드게임카페인데 만화카페로 검색되어 나온 경우) — 재검색으로 정확한 업종 재분류 후 반영\n';
-      newFindings.forEach(function(nf){
-        kakaoBlockStr += '    - ['+nf.queriedAs+'로 검색됨] '+nf.name+' · '+nf.distance_m+'m · '+(nf.address||'')+' → 재확인 필요\n';
-      });
+      if(nfComp.length){
+        kakaoBlockStr += '  ✅ 카카오 업종분류가 만화방·보드카페 등으로 확인된 비브랜드 경쟁업체 — 경쟁업체로 간주(웹검색은 영업 여부 확인용)\n';
+        nfComp.forEach(function(nf){
+          kakaoBlockStr += '    - ['+nf.kind+'] '+nf.name+' · '+nf.distance_m+'m'+(nf.distance_m<=500?'(500m 이내)':'(500m~1km)')+' · '+(nf.address||'')+' · 업종: '+nf.category+'\n';
+        });
+      }
+      if(nfRef.length){
+        kakaoBlockStr += '  ℹ️ 테마·룸카페(경쟁업체 아님, 참고만): '+nfRef.slice(0,5).map(function(nf){return nf.name+' '+nf.distance_m+'m';}).join(', ')+'\n';
+      }
+      if(nfOut.length){
+        kakaoBlockStr += '  ⛔ 검색어에만 걸리고 업종이 다른 업체(제외 후보 — 상호만 보고 경쟁사로 넣지 말 것): '+nfOut.slice(0,6).map(function(nf){return nf.name+'('+(nf.category||'업종미상').split(' > ').pop()+') '+nf.distance_m+'m';}).join(', ')+'\n';
+      }
     }
+    kakaoBlockStr += '  ⚠️ 카카오에 미등록된 소규모 만화방·보드카페가 있을 수 있음 → \'[읍·동명] 만화방\', \'[읍·동명] 만화까페\', \'[읍·동명] 보드카페\'를 웹검색으로 각 1회 추가 확인\n'
   }
     var brandDesc=brand.desc;
   var brandStoreStr=brand.stores.length>0
     ? brand.stores.map(function(s){return s.name+'('+s.dist+'km)'}).join(', ')
     : '없음';
 
-  var p='벌툰 상권 분석을 요청합니다. 2026년 최신 기준으로 웹 검색 후 분석하세요. [v4.7]\n\n'
+  var simOldStr=''+'【참조 가맹점 유사도 가중치(similarity_weight) — v9.3 프로파일 대조표 방식】\n'
+    +'⚠️ \'느낌상 비슷하다\'로 고르지 말 것 — 아래 7개 항목을 분석지 vs 참조매장으로 하나씩 대조해 점수화할 것\n'
+    +'\n'
+    +'[1단계] 먼저 분석 주소의 상권 프로파일을 7개 항목으로 확정할 것:\n'
+    +'  ① 상권유형: 번화가/역세권/주거근린/신도시(입주5년내)/구도심중심지/대학가/오피스 중 택1\n'
+    +'  ② 영화관 유무: 반경 500m 내 영화관 있음/없음 (커플 데이트 코스 성립 여부의 핵심)\n'
+    +'  ③ 중고생 수요 기반: 반경 1km 내 중·고교 유무 + 반경 500m 내 중고생 대상 학원 유무 (둘 다 있음/하나만/둘 다 없음)\n'
+    +'  ④ 대단지 아파트 유무: 반경 500m 내 대단지(500세대 이상) 있음/없음 (가족 고정수요 여부)\n'
+    +'  ⑤ 도시 위계: 서울 핵심번화가 / 수도권 대도시 / 수도권 중소도시 / 지방 광역시 / 지방 중소도시\n'
+    +'  ⑥ 배후지 규모(거주인구): 반경 500m 내 실거주 세대수 기준 — 대(3000세대↑)/중(1000~3000)/소(1000미만)\n'
+    +'     ↳ 확인법: 반경 내 아파트단지 세대수 합산(웹검색 \'[아파트명] 세대수\'), 오피스텔·빌라 밀집도 반영\n'
+    +'  ⑦ 유동인구·소비력 수준: 상/중/하 — 유동인구 규모와 소비 단가를 함께 판단\n'
+    +'     ↳ 상: 광역 집객(관광지·대형번화가·환승역) 또는 고소득 배후(강남권·판교·분당 등)\n'
+    +'     ↳ 중: 지역 생활권 중심(역세권 근린·시청/터미널 인근) 수준의 일상 소비\n'
+    +'     ↳ 하: 순수 주거 배후만 있고 외부 유입 거의 없음, 소비 단가 낮은 지역\n'
+    +'     ↳ 확인법: 지하철역 승하차 순위·상권 언급 빈도·주변 임대료 수준·고소득 주거지 여부 등으로 종합 판단\n'
+    +'\n'
+    +'[2단계] 각 참조매장 후보에 대해 위 7개 항목이 몇 개나 일치하는지 세어서 가중치 산정:\n'
+    +'  7개 일치 → similarity_weight 0.95~1.0\n'
+    +'  6개 일치 → 0.85~0.94\n'
+    +'  5개 일치 → 0.7~0.84\n'
+    +'  4개 일치 → 0.55~0.69\n'
+    +'  3개 일치 → 0.4~0.54 (참고 수준)\n'
+    +'  2개 이하 일치 → 0.4 미만 → 참조 목록에서 제외 (매출 계산 포함 금지)\n'
+    +'⚠️ ①상권유형이 불일치하면 나머지가 다 맞아도 최대 0.5를 넘지 말 것 — 상권유형이 가장 중요한 변수\n'
+    +'⚠️ ⑥배후지 규모나 ⑦소비력이 2단계 이상 차이나면(예: 대 vs 소, 상 vs 하) 최대 0.5를 넘지 말 것 — 매출 규모를 직접 좌우하는 변수\n'
+    +'⚠️ similarity_reason에 반드시 \'7개 중 몇 개 일치(어떤 항목이 일치·불일치)\'를 구체적으로 기재할 것\n'
+    +'   예) \'7개중 5개 일치: 상권유형(역세권)·영화관없음·대단지있음·수도권중소도시·배후지중규모 일치, 중고교유무·소비력(상vs중) 불일치\'\n'
+    +'\n'
+    +'⚠️ 참조매장은 3~5개를 선정하되, 0.4 미만은 억지로 채우지 말고 과감히 제외할 것\n'
+    +'⚠️ 만약 0.55(4개 일치) 이상 되는 매장이 3개 미만이면, 그 사실을 verdict에 명시하고 \'참조매장 부족으로 추정 신뢰도 낮음\'이라고 밝힐 것\n'
+    +'⚠️ similarity_reason에는 실제로 일치한 요소만 적을 것 — 분석 주소가 역세권인지 확인 안 됐다면 \'역세권\'이라는 단어 자체를 쓰지 말 것\n'
+    +'\n';
+
+  // ── v9.4: 객관 프로파일 & 참조매장 후보(결정적 매칭) ──
+  var profileBlockStr='', simSectionStr='';
+  LAST_CTX = {fp:fp, bp:brand.penalty, area:parseFloat(area)||0, rent:parseFloat(rent)||0, candidates:[], siteItems:null};
+  if(SITE_PROFILE){
+    var sp=SITE_PROFILE, si=deriveItems(sp);
+    var cands=rankCandidates(si,10);
+    LAST_CTX.siteItems=si;
+    LAST_CTX.candidates=cands.map(function(c){return {name:c.name,match:c.match,detail:c.detail,cap2:c.cap2};});
+    var nm=function(arr){return arr.map(function(x){return x.name+' '+x.distance_m+'m';}).join(', ');};
+    profileBlockStr += '\n【위젯 객관 프로파일 — v9.4 카카오 업종분류 기반 자동 계산 · 참조매장 '+REF_PROFILES.length+'곳과 동일 규칙('+REF_PROFILES_DATE+' 기준)】\n'
+      +'  ②영화관(500m·영업중): '+si.cinema+(sp.cinema.length?' — '+nm(sp.cinema):'')
+        +(sp.cinemaClosed.length?' / 휴관·폐관이라 제외: '+sp.cinemaClosed.join(', '):'')+'\n'
+      +'  ③중고생 기반: '+si.teen+' — 중·고교(1km) '+sp.school_n+'곳'+(sp.schools.length?' ('+nm(sp.schools.slice(0,4))+')':'')
+        +' / 중고생 대상 학원(500m) 추정 '+sp.acad_student_est+'곳 (학원 업종 전체 '+sp.acad_total+'곳 중 표본 '+sp.acad_sampled+'곳 분류 → 중고생 대상 '+sp.acad_student_sample+'곳)\n'
+      +(sp.acad_examples.length?'     ↳ 중고생 대상 예: '+sp.acad_examples.join(', ')+'\n':'')
+      +(sp.acad_non_examples.length?'     ↳ 성인·예체능으로 분류되어 제외된 예: '+sp.acad_non_examples.join(', ')+'\n':'')
+      +'  ④지하철역(500m): '+si.subway+(sp.subway.length?' — '+nm(sp.subway):'')+'\n'
+      +'  ⑤도시위계: '+si.tier+' ('+sp.region+')\n'
+      +'  ⑥배후지(500m 아파트 단지 수): '+si.back+' — '+sp.apt_n+'개 단지'+(sp.apts.length?' ('+nm(sp.apts)+')':'')+'\n'
+      +'  ⑦상업밀도(300m 음식점+카페): '+si.dens+' — '+sp.dens+'곳\n'
+      +'  참고: 1km 내 대학교 '+sp.univ_n+'곳'+(sp.univ.length?' ('+sp.univ.join(', ')+')':'')+'\n'
+      +'  ⚠️ ②~⑦은 위젯 계산 확정값 — site_profile에 그대로 옮겨 적을 것(임의 수정 금지). ①상권유형과 유동소비력만 직접 판정\n'
+      +'  ⚠️ ⑥은 단지 \'수\'만 반영함 — 실제 세대수는 웹검색(\'[아파트명] 세대수\')으로 확인해 [C]가족 판정과 verdict에 활용\n'
+      +'  ⚠️ 영화관·학교·학원·아파트는 업종분류로 걸러낸 값이라 이름 오탐(예: \'○○CGV점\' 카셰어링·주차장, 공인중개사)이 이미 제거됨\n';
+
+    var lines=cands.map(function(c,i){
+      var rp=c.rp;
+      return '  '+(i+1)+'. '+c.name+'('+c.area+'평,₩'+Math.round(c.sales/10000)+'만) | 객관일치 '+c.match+'/6 ['+c.detail+']'
+        +(c.cap2?' ⚠️2단계격차(⑥또는⑦→최대0.5)':'')
+        +' | '+rp.rg+' · '+(rp.sub?'역:'+rp.sub:'역없음')+' · 대학교'+rp.uni+' · 영화관 '+(rp.cin.length?rp.cin.join('/'):'없음')
+        +' · 중고생학원'+rp.ac+' · 단지'+rp.apt+' · 밀도'+rp.d;
+    }).join('\n');
+
+    simSectionStr = '【참조 가맹점 선정 — v9.4 위젯 후보 방식(결정적 매칭)】\n'
+      +'⛔ 참조매장은 반드시 아래 [위젯 후보 10곳] 안에서만 판정할 것 — 목록 밖 매장은 위젯이 자동 제외함\n'
+      +'✅ 후보 순위는 7항목 중 객관 6개(②영화관 ③중고생 ④지하철역 ⑤도시위계 ⑥배후지 ⑦상업밀도)를 위젯이 '+REF_PROFILES.length+'곳 고정 프로파일과 대조해 계산한 결과임\n'
+      +'\n'
+      +'[모델이 판정할 것 — 2가지뿐]\n'
+      +'  (1) type_match: 분석지 ①상권유형과 각 후보의 실질 상권유형(번화가/역세권/주거근린/신도시(입주5년내)/구도심중심지/대학가/오피스)이 같은가\n'
+      +'      ↳ 후보 특징(역·대학교·영화관·밀도)을 참고하고, 불확실하면 \'[매장명] 벌툰 위치\'를 웹검색해 확인. 근거는 type_reason에 기재\n'
+      +'      ↳ 신도시 5년 규칙 적용: 입주 5년 초과 지역 매장을 \'신도시\'로 보지 말 것\n'
+      +'  (2) spend_gap2: 분석지와 후보의 유동소비력이 상 vs 하로 2단계 이상 차이나면 true\n'
+      +'      ↳ 상=광역 집객(대형번화가·환승역·관광지) 또는 고소득 배후 / 중=지역 생활권 중심 / 하=순수 주거 배후·외부 유입 거의 없음\n'
+      +'      ↳ ⛔ 지하철역 없는 단일 읍·면 생활권은 \'상\' 금지(최대 \'중\') / 인근 상가 공실·경매 유찰이 다수면 한 단계 하향 검토\n'
+      +'\n'
+      +'[가중치 — 위젯 고정 규칙, 모델 임의 조정 금지]\n'
+      +'  일치 수 N = 객관일치(후보 표기) + (type_match=true면 1)\n'
+      +'  N=7→0.97 / 6→0.90 / 5→0.77 / 4→0.62 / 3→0.47 / 2 이하→제외\n'
+      +'  상한 0.5: type_match=false / 후보에 ⚠️2단계격차 표시 / spend_gap2=true (하나라도 해당하면)\n'
+      +'  선정: 가중치 0.4 이상 중 상위 5곳(동점은 후보 순위 우선) → 0.55 이상이 3곳 미만이면 verdict에 \'참조매장 부족으로 추정 신뢰도 낮음\' 명시\n'
+      +'\n'
+      +'[JSON 기재 규칙]\n'
+      +'  · reference_stores에는 후보 10곳을 전부 기재(제외되는 매장도 type_match·spend_gap2를 반드시 채움)\n'
+      +'  · similarity_weight는 위 규칙대로 계산한 값, similarity_reason은 \'7개중 N개 일치: …\' 형식\n'
+      +'  · 위젯이 결과 JSON을 받으면 가중치·평수보정·가중평균·순수익·등급을 같은 규칙으로 재계산하며, 모델 수치와 다르면 위젯 값이 우선 적용됨\n'
+      +'\n'
+      +'[분석지 객관값] ②'+si.cinema+' ③'+si.teen+' ④'+si.subway+' ⑤'+si.tier+' ⑥'+si.back+'(단지'+si._apt+') ⑦'+si.dens+'(밀도'+si._dens+') · 중고생학원 '+si._acad+'\n'
+      +'[위젯 후보 10곳] (순위. 매장(평수,원매출) | 객관일치 n/6 [세부] | 특징)\n'
+      +lines+'\n\n';
+  } else {
+    profileBlockStr += '\n⚠️ 위젯 객관 프로파일 계산 실패(카카오 API) — 영화관·중고교·학원·아파트·지하철역은 웹검색으로 직접 확인하고, 참조매장은 아래 수동 대조표 방식으로 선정할 것\n';
+    simSectionStr = simOldStr;
+  }
+  var p='벌툰 상권 분석을 요청합니다. 2026년 최신 기준으로 웹 검색 후 분석하세요. [v4.8 · 위젯 v9.4]\n\n'
     +'분석 주소: "'+addr+'"\n'
     +'입점 면적: '+area+'평\n'
     +'월 임대료: '+rentStr+'\n'
@@ -702,6 +1082,7 @@ function generatePrompt(){
     +'  brand_penalty: '+brand.penalty+' ('+brandDesc+')\n'
     +'  7km 내 벌툰 가맹점: '+brandStoreStr+'\n\n'
     +kakaoBlockStr
+    +profileBlockStr
     +'\n'
     +'━━━━━━━━━━━━━━━━\n'
     +'【STEP 0】좌표 기반 실제 위치 선확인 — 반드시 분석 시작 전 실행\n'
@@ -810,20 +1191,22 @@ function generatePrompt(){
     +'     ★강함: 영화관(CGV·메가박스·롯데시네마) 존재 + 카페·쇼핑·음식점 다수 → 영화 보고 밥먹고 놀 수 있는 완결형 데이트 상권\n'
     +'     ★보통: 영화관은 없으나 카페·올리브영·패스트푸드 등 데이트 관련 시설이 여러 개 있어 부분적 데이트 코스 성립\n'
     +'     ★약함: 영화관 없고 카페·소비시설도 산발적이거나 1~2개뿐 → 일부러 데이트하러 올 이유가 없는 지역\n'
-    +'     ⚠️ 올리브영·스타벅스 몇 개 있다고 자동으로 \'강함\' 금지 — 영화관 부재 시 최대 \'보통\'까지만 부여\n'    +'  [B] 중·고등학생: ⚠️ 학원과 학교의 판정 반경이 다름 — 반드시 구분해서 확인할 것\n'
+    +'     ⚠️ 올리브영·스타벅스 몇 개 있다고 자동으로 \'강함\' 금지 — 영화관 부재 시 최대 \'보통\'까지만 부여\n'
+    +'     ✅ v9.4: 영화관은 [위젯 객관 프로파일]의 \'영업중\' 영화관만 인정 — 휴관·폐관 표기 영화관은 제외, 상호에 CGV가 들어간 카셰어링·주차장 등은 위젯이 업종분류로 이미 제거함\n'    +'  [B] 중·고등학생: ⚠️ 학원과 학교의 판정 반경이 다름 — 반드시 구분해서 확인할 것\n'
     +'     · 학원(중고생 대상): 반경 500m 이내 기준 — 학원은 수업 전후 짧게 들르는 동선이라 근접해야 유효\n'
     +'     · 중·고등학교: 반경 1km 이내 기준 — 학생은 하교 후 1km 정도는 충분히 이동하므로 500m로 좁히면 과소평가됨\n'
     +'     ★강함: 반경 1km 내 중·고교 존재 + 반경 500m 내 중고생 대상 학원 존재 (둘 다 충족)\n'
     +'     ★보통: 둘 중 하나만 충족 (학교만 있거나, 학원만 있는 경우)\n'
     +'     ★약함: 반경 1km 내 중·고교 없고, 반경 500m 내 중고생 학원도 없음\n'
     +'     ⚠️ 학원 판정 시 성인 대상 학원(공무원·기술사·자격증·댄스·실용음악 등)은 중고생 수요로 인정하지 말 것 — 입시·보습·영어·수학 등 중고생 대상 학원만 유효\n'
+    +'     ✅ v9.4: 학원은 [위젯 객관 프로파일]의 \'중고생 대상 학원 추정 수\'로 판정 — 3곳 이상이면 학원 기반 있음(최근접 1곳만 보고 판정 금지)\n'
     +'     ✅ v9.3부터 카카오 API가 중·고교 항목을 반경 1km 기준으로 자동 조회함 — 위젯 데이터에 결과가 있으면 그대로 신뢰하고 재검색 불필요\n'
-    +'     ⚠️ 단, 위젯 카카오 API 데이터가 없거나 실패한 경우에만 웹검색으로 반경 1km 내 중·고교를 직접 확인할 것\n'    +'  [C] 어린 자녀 동반 가족: 반경 500m 내 아파트단지·키즈카페·마트·공원 등 가족시설 집중 여부\n'    +'→ [A][B][C] 각각 "강함/보통/약함" 판정 — 반드시 500m 내 실제 시설 근거 명시\n'    +'⚠️ STEP 0.5 개별 검색 결과 기반으로만 판정. 검색 안 하고 \'약함\'으로 단정하는 것 금지\n'    +'⚠️ \'약함\' 판정 시 어떤 검색어로 확인했는지 detail 필드에 명시 필수\n'    +'→ 2개 이상 강함=high / 1개만 강함=mid / 모두 약함=low → 체류수요인구 점수 반영\n\n'    +'━━━━━━━━━━━━━━━━\n'    +'【STEP 3】참조 가맹점 선정 및 매출 계산 (v9.3 실매출 기반)\n'
+    +'     ⚠️ 단, 위젯 카카오 API 데이터가 없거나 실패한 경우에만 웹검색으로 반경 1km 내 중·고교를 직접 확인할 것\n'    +'  [C] 어린 자녀 동반 가족: 반경 500m 내 아파트단지·키즈카페·마트·공원 등 가족시설 집중 여부\n'    +'→ [A][B][C] 각각 "강함/보통/약함" 판정 — 반드시 500m 내 실제 시설 근거 명시\n'    +'⚠️ STEP 0.5 개별 검색 결과 기반으로만 판정. 검색 안 하고 \'약함\'으로 단정하는 것 금지\n'    +'⚠️ \'약함\' 판정 시 어떤 검색어로 확인했는지 detail 필드에 명시 필수\n'    +'→ 2개 이상 강함=high / 1개만 강함=mid / 모두 약함=low → 체류수요인구 점수 반영\n\n'    +'━━━━━━━━━━━━━━━━\n'    +'【STEP 3】참조 가맹점 선정 및 매출 계산 (v9.4 실매출·고정 프로파일 기반)\n'
     +'━━━━━━━━━━━━━━━━\n'
     +'⚠️ 브랜드 근접 가맹점: 위젯이 146개 전체 좌표 기반으로 이미 계산 완료\n'
     +'   → brand_penalty: '+brand.penalty+' ('+brandDesc+')\n'
     +'   → 7km 내 가맹점: '+brandStoreStr+'\n\n'
-    +'⚠️ 예상매출 참조 가맹점 선정: 2021년↑ 오픈 107개 실매출 기준\n\n'
+    +'⚠️ 예상매출 참조 가맹점 선정: 2021년↑ 오픈 '+STORES_107.length+'개 실매출 기준\n\n'
     +'【참조 가맹점 선정 기준 — v9.3】\n'
     +'★ 1순위(핵심): 상권 유형 — 가장 중요한 기준\n'
     +'  ↳ 번화가(유흥·쇼핑 중심) / 대학가 / 역세권 / 주거근린 / 신도시 근린상가 / 오피스 등\n'
@@ -853,39 +1236,7 @@ function generatePrompt(){
     +'  ↳ ✅ 폐점 확인된 연신내로데오점·울진본점·화명역점은 참조 매장 목록에서 완전히 제거됨\n\n'
     +'⛔ 최악의 실수 사례④: 실제로 검증 안 된 속성(예: 역세권 아닌데 \'역세권\'이라고 기재)을 similarity_reason에 근거로 넣음 — 반드시 실제로 확인된 일치 요소만 기재\n'
     +'\n'
-    +'【참조 가맹점 유사도 가중치(similarity_weight) — v9.3 프로파일 대조표 방식】\n'
-    +'⚠️ \'느낌상 비슷하다\'로 고르지 말 것 — 아래 7개 항목을 분석지 vs 참조매장으로 하나씩 대조해 점수화할 것\n'
-    +'\n'
-    +'[1단계] 먼저 분석 주소의 상권 프로파일을 7개 항목으로 확정할 것:\n'
-    +'  ① 상권유형: 번화가/역세권/주거근린/신도시(입주5년내)/구도심중심지/대학가/오피스 중 택1\n'
-    +'  ② 영화관 유무: 반경 500m 내 영화관 있음/없음 (커플 데이트 코스 성립 여부의 핵심)\n'
-    +'  ③ 중고생 수요 기반: 반경 1km 내 중·고교 유무 + 반경 500m 내 중고생 대상 학원 유무 (둘 다 있음/하나만/둘 다 없음)\n'
-    +'  ④ 대단지 아파트 유무: 반경 500m 내 대단지(500세대 이상) 있음/없음 (가족 고정수요 여부)\n'
-    +'  ⑤ 도시 위계: 서울 핵심번화가 / 수도권 대도시 / 수도권 중소도시 / 지방 광역시 / 지방 중소도시\n'
-    +'  ⑥ 배후지 규모(거주인구): 반경 500m 내 실거주 세대수 기준 — 대(3000세대↑)/중(1000~3000)/소(1000미만)\n'
-    +'     ↳ 확인법: 반경 내 아파트단지 세대수 합산(웹검색 \'[아파트명] 세대수\'), 오피스텔·빌라 밀집도 반영\n'
-    +'  ⑦ 유동인구·소비력 수준: 상/중/하 — 유동인구 규모와 소비 단가를 함께 판단\n'
-    +'     ↳ 상: 광역 집객(관광지·대형번화가·환승역) 또는 고소득 배후(강남권·판교·분당 등)\n'
-    +'     ↳ 중: 지역 생활권 중심(역세권 근린·시청/터미널 인근) 수준의 일상 소비\n'
-    +'     ↳ 하: 순수 주거 배후만 있고 외부 유입 거의 없음, 소비 단가 낮은 지역\n'
-    +'     ↳ 확인법: 지하철역 승하차 순위·상권 언급 빈도·주변 임대료 수준·고소득 주거지 여부 등으로 종합 판단\n'
-    +'\n'
-    +'[2단계] 각 참조매장 후보에 대해 위 7개 항목이 몇 개나 일치하는지 세어서 가중치 산정:\n'
-    +'  7개 일치 → similarity_weight 0.95~1.0\n'
-    +'  6개 일치 → 0.85~0.94\n'
-    +'  5개 일치 → 0.7~0.84\n'
-    +'  4개 일치 → 0.55~0.69\n'
-    +'  3개 일치 → 0.4~0.54 (참고 수준)\n'
-    +'  2개 이하 일치 → 0.4 미만 → 참조 목록에서 제외 (매출 계산 포함 금지)\n'
-    +'⚠️ ①상권유형이 불일치하면 나머지가 다 맞아도 최대 0.5를 넘지 말 것 — 상권유형이 가장 중요한 변수\n'
-    +'⚠️ ⑥배후지 규모나 ⑦소비력이 2단계 이상 차이나면(예: 대 vs 소, 상 vs 하) 최대 0.5를 넘지 말 것 — 매출 규모를 직접 좌우하는 변수\n'
-    +'⚠️ similarity_reason에 반드시 \'7개 중 몇 개 일치(어떤 항목이 일치·불일치)\'를 구체적으로 기재할 것\n'
-    +'   예) \'7개중 5개 일치: 상권유형(역세권)·영화관없음·대단지있음·수도권중소도시·배후지중규모 일치, 중고교유무·소비력(상vs중) 불일치\'\n'
-    +'\n'
-    +'⚠️ 참조매장은 3~5개를 선정하되, 0.4 미만은 억지로 채우지 말고 과감히 제외할 것\n'
-    +'⚠️ 만약 0.55(4개 일치) 이상 되는 매장이 3개 미만이면, 그 사실을 verdict에 명시하고 \'참조매장 부족으로 추정 신뢰도 낮음\'이라고 밝힐 것\n'
-    +'⚠️ similarity_reason에는 실제로 일치한 요소만 적을 것 — 분석 주소가 역세권인지 확인 안 됐다면 \'역세권\'이라는 단어 자체를 쓰지 말 것\n'
-    +'\n'
+    +simSectionStr
     +'【참조 가맹점 평수 보정(area_adjusted_sales) — v9.3 신규 필수】\n'
     +'🔒 순서 원칙 — 반드시 이 순서를 지킬 것:\n'
     +'  1단계: 1순위(상권유형·구도심여부)·2순위(상권규모) 기준으로 분석 주소와 명확히 일치하는 참조매장을 먼저 선정\n'
@@ -905,7 +1256,7 @@ function generatePrompt(){
     +'브랜드보정(위젯 계산 확정 — v9.3: 2km 이내만 적용): '+brand.penalty+' → 직선거리 1km미만=0.90/1~2km=0.95/2km초과=1.00(패널티없음)\n'
     +'입지보정: 메인=1.05/주거형=0.95/외각=0.90\n\n'
     +'보정 계산: base × '+fp+' × '+brand.penalty+' × location_penalty = adjusted\n\n'
-    +'【2021년↑ 107개 실매출 데이터】(가맹점명/평수/2025년 월평균매출)\n'
+    +'【2021년↑ '+STORES_107.length+'개 실매출 데이터】(가맹점명/평수/2025년 월평균매출)\n'
     +STORE_STR_107+'\n\n'
     +'━━━━━━━━━━━━━━━━\n'
     +'【STEP 3-B】동일 브랜드(벌툰) 근접 영향 분석\n'
@@ -981,7 +1332,7 @@ function generatePrompt(){
     +'━━━━━━━━━━━━━━━━\n'
     +'【STEP 5】위 요약 작성 후, JSON 출력 (JSON 앞뒤 마크다운·설명 문구 없이 순수 JSON만)\n'
     +'━━━━━━━━━━━━━━━━\n'
-    +'{"verification_log":[{"category":"올리브영","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"맥도날드","query":"실제검색어","result":"존재확인(...)/확인불가:(...)/제외:(500m초과등사유)"},{"category":"롯데리아·버거킹","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"영화관(CGV·메가박스·롯데시네마)","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"중고교","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"아파트단지","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"학원가","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"경쟁-만화카페","brands_checked":["놀숲","캣툰","통툰","원플레이","콩툰","카페데코믹스","툰슐랭"],"result":"존재확인(브랜드명·거리)나열또는확인불가:500m내없음"},{"category":"경쟁-보드게임카페","brands_checked":["레드버튼","홈즈앤루팡","히어로보드게임","더홀릭보드게임카페"],"result":"존재확인(브랜드명·거리)나열또는확인불가:500m내없음"},{"category":"경쟁-오티티카페","brands_checked":["홈즈앤루팡24","오티티프라이빗","오티티관","오티티시네마","오티티플러스","오티티카페온스팟","오티티프라임","오티티박스"],"result":"존재확인(브랜드명·거리)나열또는확인불가:500m내없음"}],"address":"'+addr+'","area":'+area+',"rent":'+(rent||'null')+',"floor":"'+(floor||'미입력')+'","floor_penalty":'+fp+',"is_main_location":true또는false,"is_main_reason":"충족기준번호와근거","location_type":"번화가/대학가/주거근린/역세권(기성주거지)/신도시(입주5년내)/구도심중심지/오피스/기타","site_profile":{"상권유형":"확정값","영화관":"있음/없음","중고생수요기반":"학교1km내유무+학원500m내유무(둘다있음/하나만/둘다없음)","대단지아파트":"있음/없음","도시위계":"서울핵심번화가/수도권대도시/수도권중소도시/지방광역시/지방중소도시","배후지규모":"대(3000세대↑)/중(1000~3000)/소(1000미만)·근거세대수","유동소비력":"상/중/하·판단근거"},"location_penalty":숫자,"brand_impact":{"nearby_stores":[{"name":"가맹점명","distance_km":숫자}],"brand_penalty":숫자},"brand_conflict":[{"store_name":"기존가맹점명","distance_km":숫자,"new_store_impact":"예정점포 매출영향 설명","existing_impact":"기존점 잠식 가능성 설명","coexistence":"공존가능성 판단","action_level":"RED/YELLOW/GREEN"}],"hq_action":{"level":"RED/YELLOW/GREEN","required_actions":["액션1","액션2"],"reason":"판단근거"},"reference_stores":[{"name":"가맹점명","area":숫자,"region":"지역","type":"상권유형","similarity_reason":"실제확인된일치요소만기재","similarity_weight":0.0~1.0사이숫자,"avg_monthly_sales":숫자,"area_adjusted_sales":"평수보정후매출(숫자,±10%이내차이면원매출과동일)"}],"base_monthly_sales":"area_adjusted_sales기준가중평균계산값(숫자)","adjusted_monthly_sales":숫자,"fixed_cost_44pct":숫자,"rent_amount":숫자,"estimated_net_profit":숫자,"rent_ratio_pct":숫자또는null,"net_profit_ratio_pct":숫자,"total_score":숫자,"grade":"등급문자열","verdict":"벌툰 3대 고객층(커플·청소년·가족) 관점 포함한 종합판단 3~5문장","location_summary":"입지핵심요약2~3문장","key_strengths":["강점1","강점2","강점3"],"key_risks":["리스크1","리스크2","리스크3"],"categories":[{"name":"체류수요인구","score":숫자,"max":25,"rating":"high/mid/low","main":"핵심근거(벌툰 고객층 판정 요약)","detail":"[A]커플20~30대:강함/보통/약함·500m내근거 [B]중고생:강함/보통/약함·학교1km내유무와학원500m내유무근거 [C]가족:강함/보통/약함·500m내근거"},{"name":"상권유형적합","score":숫자,"max":20,"rating":"high/mid/low","main":"핵심근거(반경500m기준상권유형)","detail":"반경500m내실제상권특성·시설구성기반판단"},{"name":"경쟁환경","score":숫자,"max":20,"rating":"high/mid/low","main":"핵심근거","detail":"상세설명"},{"name":"입지접근성","score":숫자,"max":20,"rating":"high/mid/low","main":"핵심근거","detail":"상세설명"},{"name":"성장성리스크","score":숫자,"max":15,"rating":"high/mid/low","main":"핵심근거","detail":"상세설명"}]}\n\n'
+    +'{"verification_log":[{"category":"올리브영","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"맥도날드","query":"실제검색어","result":"존재확인(...)/확인불가:(...)/제외:(500m초과등사유)"},{"category":"롯데리아·버거킹","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"영화관(CGV·메가박스·롯데시네마)","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"중고교","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"아파트단지","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"학원가","query":"실제검색어","result":"존재확인(...)/확인불가:(...)"},{"category":"경쟁-만화카페","brands_checked":["놀숲","캣툰","통툰","원플레이","콩툰","카페데코믹스","툰슐랭"],"result":"존재확인(브랜드명·거리)나열또는확인불가:500m내없음"},{"category":"경쟁-보드게임카페","brands_checked":["레드버튼","홈즈앤루팡","히어로보드게임","더홀릭보드게임카페"],"result":"존재확인(브랜드명·거리)나열또는확인불가:500m내없음"},{"category":"경쟁-오티티카페","brands_checked":["홈즈앤루팡24","오티티프라이빗","오티티관","오티티시네마","오티티플러스","오티티카페온스팟","오티티프라임","오티티박스"],"result":"존재확인(브랜드명·거리)나열또는확인불가:500m내없음"}],"address":"'+addr+'","area":'+area+',"rent":'+(rent||'null')+',"floor":"'+(floor||'미입력')+'","floor_penalty":'+fp+',"is_main_location":true또는false,"is_main_reason":"충족기준번호와근거","location_type":"번화가/대학가/주거근린/역세권(기성주거지)/신도시(입주5년내)/구도심중심지/오피스/기타","site_profile":{"상권유형":"번화가/역세권/주거근린/신도시(입주5년내)/구도심중심지/대학가/오피스 중 택1","영화관":"위젯값(있음/없음)","중고생수요기반":"위젯값(둘다있음/하나만/둘다없음)","지하철역":"위젯값(있음/없음)","도시위계":"위젯값(서울/수도권대도시/수도권중소도시/지방광역시/지방대도시/지방중소도시)","배후지규모":"위젯값(소/중/대)·웹검색 세대수 합산","상업밀도":"위젯값(하/중/상)","유동소비력":"상/중/하·판단근거"},"location_penalty":숫자,"brand_impact":{"nearby_stores":[{"name":"가맹점명","distance_km":숫자}],"brand_penalty":숫자},"brand_conflict":[{"store_name":"기존가맹점명","distance_km":숫자,"new_store_impact":"예정점포 매출영향 설명","existing_impact":"기존점 잠식 가능성 설명","coexistence":"공존가능성 판단","action_level":"RED/YELLOW/GREEN"}],"hq_action":{"level":"RED/YELLOW/GREEN","required_actions":["액션1","액션2"],"reason":"판단근거"},"reference_stores":[{"name":"위젯 후보명(후보 10곳 전부 기재)","type_match":true또는false,"type_reason":"상권유형 일치·불일치 근거","spend_gap2":true또는false,"similarity_weight":"위젯 고정규칙 값(숫자)","similarity_reason":"7개중 N개 일치: 일치·불일치 항목","area":숫자,"region":"지역","type":"상권유형","avg_monthly_sales":숫자,"area_adjusted_sales":"평수보정후매출(숫자,±10%이내차이면원매출과동일)"}],"base_monthly_sales":"area_adjusted_sales기준가중평균계산값(숫자)","adjusted_monthly_sales":숫자,"fixed_cost_44pct":숫자,"rent_amount":숫자,"estimated_net_profit":숫자,"rent_ratio_pct":숫자또는null,"net_profit_ratio_pct":숫자,"total_score":숫자,"grade":"등급문자열","verdict":"벌툰 3대 고객층(커플·청소년·가족) 관점 포함한 종합판단 3~5문장","location_summary":"입지핵심요약2~3문장","key_strengths":["강점1","강점2","강점3"],"key_risks":["리스크1","리스크2","리스크3"],"categories":[{"name":"체류수요인구","score":숫자,"max":25,"rating":"high/mid/low","main":"핵심근거(벌툰 고객층 판정 요약)","detail":"[A]커플20~30대:강함/보통/약함·500m내근거 [B]중고생:강함/보통/약함·학교1km내유무와학원500m내유무근거 [C]가족:강함/보통/약함·500m내근거"},{"name":"상권유형적합","score":숫자,"max":20,"rating":"high/mid/low","main":"핵심근거(반경500m기준상권유형)","detail":"반경500m내실제상권특성·시설구성기반판단"},{"name":"경쟁환경","score":숫자,"max":20,"rating":"high/mid/low","main":"핵심근거","detail":"상세설명"},{"name":"입지접근성","score":숫자,"max":20,"rating":"high/mid/low","main":"핵심근거","detail":"상세설명"},{"name":"성장성리스크","score":숫자,"max":15,"rating":"high/mid/low","main":"핵심근거","detail":"상세설명"}]}\n\n'
     +'━━━━━━━━━━━━━━━━\n'
     +'【등급 산정 기준 — 순수익 + 메인 입지 기반】\n'
     +'━━━━━━━━━━━━━━━━\n'
@@ -1076,8 +1427,11 @@ function gradeStyle(g){
 function renderResult(r){
   var box=$('resultBox');
 
+  // v9.4: 참조매장 기반 결정적 재계산 — 모델 수치보다 위젯 값 우선
+  var rc=recomputeFromRefs(r);
+  var modelSales=r.adjusted_monthly_sales||0;
+  var sales=rc.ok?rc.adjusted:modelSales;
   // 순수익 위젯 직접 계산 후 검증
-  var sales=r.adjusted_monthly_sales||0;
   var rent=(r.rent_amount)||(r.rent?r.rent*10000:0);
   var netCalc=Math.round(sales*0.56 - rent);
   var net=r.estimated_net_profit||0;
@@ -1099,6 +1453,31 @@ function renderResult(r){
   var stH='';
   (r.reference_stores||[]).forEach(function(s){stH+='<div class="store-item"><div class="store-name">'+s.name+'</div><div class="store-sub">'+s.region+' · '+s.area+'평 · '+(s.type||s.similarity_reason||'')+'</div><div class="store-sales">'+fmt(s.avg_monthly_sales)+'/월</div></div>';});
   if(!stH)stH='<div style="font-size:12px;color:#bbb">유사 데이터 없음</div>';
+  // v9.4: 재계산 결과로 참조매장 목록 재구성
+  var rcH='';
+  if(rc.rows.length){
+    var regionOf={}; (r.reference_stores||[]).forEach(function(s){regionOf[s.name]=s.region||'';});
+    var usedRows=rc.rows.filter(function(x){return x.used;});
+    if(rc.ok && usedRows.length){
+      stH='';
+      usedRows.forEach(function(x){
+        stH+='<div class="store-item"><div class="store-name">'+x.name+'</div><div class="store-sub">'+(regionOf[x.name]||'')+' · '+x.area+'평 · 가중치 '+x.weight+(x.n?' · '+x.n+'/7 일치':'')+'</div><div class="store-sales">'+fmt(x.adj)+'/월<span style="font-size:10px;color:#999;display:block">원매출 '+fmt(x.sales)+'</span></div></div>';
+      });
+    }
+    var hasCtx=LAST_CTX&&LAST_CTX.candidates&&LAST_CTX.candidates.length;
+    rcH+='<div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:8px">'+(hasCtx?'위젯 후보 10곳의 객관 6항목 + 모델의 ①상권유형 판정으로 가중치를 고정 계산했습니다.':'이 결과는 프롬프트를 만든 화면과 다른 세션에서 열려 위젯 후보 정보가 없습니다. 결과 JSON의 가중치가 표기된 일치 개수 범위 안에 있는지만 검증했습니다.')+'</div>';
+    rc.rows.forEach(function(x){
+      var col=x.used?'#085041':'#999';
+      rcH+='<div style="font-size:11px;padding:5px 0;border-bottom:.5px solid #eee;color:'+col+'"><b>'+(x.used?'✓ ':'· ')+x.name+'</b> · 가중치 '+(x.weight!==undefined?x.weight:'-')+(x.detail?' · '+x.detail:'')
+        +(x.used?' · 보정매출 '+fmt(x.adj):' · 미사용')
+        +(x.flags.length?'<div style="color:#B4570A;margin-top:2px">⚠️ '+x.flags.join(' / ')+'</div>':'')+'</div>';
+    });
+    if(rc.ok){
+      rcH+='<div style="font-size:12px;margin-top:8px;line-height:1.6">기준매출 '+fmt(rc.base)+' × 층수 '+rc.fp+' × 브랜드 '+rc.bp+' × 입지 '+rc.lp+' = <b>'+fmt(rc.adjusted)+'</b>'
+        +(modelSales&&Math.abs(modelSales-rc.adjusted)>rc.adjusted*0.01?'<br><span style="color:#B4570A">모델 제시 예상매출 '+fmt(modelSales)+' → 위젯 재계산값 적용</span>':'<br><span style="color:#1D9E75">모델 수치와 일치</span>')+'</div>';
+    }
+    if(rc.warnings.length) rcH+='<div style="font-size:11px;color:#B4570A;margin-top:6px">'+rc.warnings.map(function(w){return '⚠️ '+w;}).join('<br>')+'</div>';
+  }
 
   // 브랜드
   var brH='';
@@ -1225,16 +1604,17 @@ function renderResult(r){
     +(net<5000000?'<div class="warn-c">⚠️ 순수익 500만원 미만 → C등급(입점 불가)</div>':'')
     +'</div>'
 
-    +'<div class="card"><div class="card-title">🏪 참조 유사 가맹점 <span style="font-size:10px;background:#EEF2FF;color:#3B4FB0;border-radius:6px;padding:2px 7px;margin-left:4px">2021년↑ 107개 실매출 · 1순위 도시규모 → 2순위 상권유형 → 3순위 평수</span></div><div class="store-list">'+stH+'</div></div>'
+    +'<div class="card"><div class="card-title">🏪 참조 유사 가맹점 <span style="font-size:10px;background:#EEF2FF;color:#3B4FB0;border-radius:6px;padding:2px 7px;margin-left:4px">2021년↑ '+STORES_107.length+'개 실매출 · 객관 6항목 + 상권유형 대조</span></div><div class="store-list">'+stH+'</div></div>'
+    +(rcH?'<div class="card"><div class="card-title">🧮 위젯 재계산 검증 (v9.4)</div>'+rcH+'</div>':'')
     +(brH?'<div class="card"><div class="card-title">🏷️ 인근 벌툰 가맹점</div>'+brH+'</div>':'')
     +(catH?'<div class="card"><div class="card-title">📊 상권 종합 점수</div><div class="cat-grid">'+catH+'</div></div>':'')
-    +(vlH?'<div class="card"><div class="card-title">🔍 검증 로그 (v9.3 신규 — 실제 검색 근거)</div>'+vlH+'</div>':'')
+    +(vlH?'<div class="card"><div class="card-title">🔍 검증 로그 (실제 검색 근거)</div>'+vlH+'</div>':'')
     +'<div class="summary-card"><div class="sum-text">'+r.location_summary+'</div><div class="tag-lbl">핵심 강점</div><div class="tags">'+strH+'</div><div class="tag-lbl">주요 리스크</div><div class="tags">'+rkH+'</div></div>'
     +(detH?'<div class="card"><div class="card-title">🔍 세부 분석</div><div class="det-list">'+detH+'</div></div>':'')
-    +'<div class="note"><b>v9.3 · 📅 2026년 최신 · 브랜드거리: 146개 / 예상매출: 2021년↑ 107개 실매출</b><br>'
+    +'<div class="note"><b>v9.4 · 📅 2026년 최신 · 브랜드거리: 146개 / 예상매출: 2021년↑ '+STORES_107.length+'개 실매출 · 참조 프로파일 '+REF_PROFILES_DATE+' 고정</b><br>'
     +'수익공식: 순수익 = 월매출 × 56% - 임대료 (고정지출 44% 자동 차감)<br>'
     +'등급: C(500만↓ 입점불가) · +(500~1천) · A(1천~1.5천) · A+(1.5천~2천) · AA… M=메인입지 접두사<br>'
-    +'참조선정: 1순위 도시규모 → 2순위 상권유형(핵심) → 3순위 평수±30%<br>'
+    +'참조선정: 위젯 후보 10곳(객관 6항목 자동 대조) → ①상권유형 판정 → 7항목 고정 가중치 · 평수 보정 지수 0.85<br>'
     +'층수: <b style="color:#E24B4A">지하=0.90</b> · 1~3층=1.00 · 4~5층=0.95 · 6층+=0.90</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
     +'<button class="btn-save-img" id="saveImgBtn" onclick="saveImage()">📸 이미지로 저장</button>'
@@ -1243,7 +1623,7 @@ function renderResult(r){
 }
 
 function resetAll(){
-  ['iAddr','iArea','iRent','iLat','iLon','jsonInput'].forEach(function(id){$(id).value='';});
+  ['iAddr','iFloor','iArea','iRent','iLat','iLon','jsonInput'].forEach(function(id){$(id).value='';});
   hide('floorDetected');;
   hide('step2Box');hide('resultBox');hide('errBox');hide('previewBox');
   show('formBox');setStep(1);
