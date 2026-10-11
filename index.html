@@ -567,6 +567,7 @@ var FC_BT = {mdape:25.1, mape:31.1, w30:58.7, base_mdape:26.7, base_mape:41.2, n
 var FC_TIER = {'서울':5,'수도권대도시':4,'지방광역시':3,'지방대도시':2.5,'수도권중소도시':2,'지방중소도시':1};
 var FC_LABEL = ['상업밀도','500m 상가수','아파트단지','중고생학원','입시·교과학원','중·고교','영화관','지하철역','대학교','주요상권 소속','상권면적','도시위계'];
 var FC_LAST = null;
+var FC_SHORT = ['①상업밀도','②상가수','③아파트단지','④중고생학원','⑤입시교과학원','⑥중고교','⑦영화관','⑧지하철역','⑨대학교','⑩주요상권','⑪상권면적','⑫도시위계'];
 
 function fcVec(o){
   var L=Math.log1p;
@@ -611,6 +612,13 @@ function forecastSales(site, area, fp, bp, rentWon, kakao){
     x.gap=order.slice(-2).reverse().map(function(o){return FC_LABEL[o[1]]+'('+fcRaw(site,o[1])+' vs '+fcRaw(x.ref,o[1])+')';});
   });
   nb.forEach(function(x){ x.wpct=Math.round(x.w/sw*100); });
+  // v9.7: 재계산 검증 카드용 — 상위 10곳(7곳 반영 + 3곳 미사용)과 12항목 ○/× (분석지와 0.5 표준편차 이내면 ○)
+  var top=rows.slice(0,10);
+  top.forEach(function(x,i){
+    if(x.adj===undefined) x.adj=areaAdjust(x.sales, x.area, area);
+    x.used=i<FC_K;
+    x.marks=x.diffs.map(function(v,k){ return FC_SHORT[k]+(v<0.5?'○':'×'); }).join(' ');
+  });
   var base=Math.round(Math.exp(sl/sw));
   var adjusted=Math.round(base*fp*bp);
   var main=fcMainRule(site, kakao);
@@ -623,7 +631,7 @@ function forecastSales(site, area, fp, bp, rentWon, kakao){
     range50:[Math.round(adjusted*FC_Q.p25), Math.round(adjusted*FC_Q.p75)],
     range80:[Math.round(adjusted*FC_Q.p10), Math.round(adjusted*FC_Q.p90)],
     net:net, rent:rentWon, isMain:main.isMain, mainWhy:main.why, grade:calcGrade(net, main.isMain),
-    neighbors:nb, warnings:warn};
+    neighbors:nb, top:top, warnings:warn};
 }
 function renderForecastCard(fc){
   var el=$('forecastBox'); if(!el) return;
@@ -1654,7 +1662,9 @@ function renderResult(r){
   if(fcx){
     sales=fcx.adjusted;
     rc={ok:true, base:fcx.base, fp:fcx.fp, bp:fcx.bp, lp:1, adjusted:fcx.adjusted, warnings:fcx.warnings.slice(),
-        rows:fcx.neighbors.map(function(x){ return {name:x.name, area:x.area, sales:x.sales, adj:x.adj, weight:+(x.wpct/100).toFixed(2), used:true, flags:[], detail:'닮은 점: '+x.same.join(', ')}; })};
+        rows:(fcx.top||fcx.neighbors).map(function(x){ return {name:x.name, area:x.area, sales:x.sales, adj:x.adj,
+          weight:x.used!==false&&x.wpct!==undefined?+(x.wpct/100).toFixed(2):undefined, used:x.used!==false&&x.wpct!==undefined, flags:[],
+          detail:x.marks||('닮은 점: '+x.same.join(', '))}; })};
   }
   // 순수익 위젯 직접 계산 후 검증
   var rent=(r.rent_amount)||(r.rent?r.rent*10000:0);
@@ -1690,7 +1700,7 @@ function renderResult(r){
       });
     }
     var hasCtx=LAST_CTX&&LAST_CTX.candidates&&LAST_CTX.candidates.length;
-    rcH+='<div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:8px">'+(fcx?'사이트 자동 예측(유사 상권 7곳 가중평균)이 확정값으로 적용되었습니다. 모델이 다른 수치를 적었더라도 무시됩니다.':hasCtx?'위젯 후보 10곳의 객관 6항목 + 모델의 ①상권유형 판정으로 가중치를 고정 계산했습니다.':'이 결과는 프롬프트를 만든 화면과 다른 세션에서 열려 위젯 후보 정보가 없습니다. 결과 JSON의 가중치가 표기된 일치 개수 범위 안에 있는지만 검증했습니다.')+'</div>';
+    rcH+='<div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:8px">'+(fcx?'위젯 후보 상위 10곳을 분석지와 12개 객관 항목으로 비교했습니다(○ = 분석지와 비슷, × = 차이 큼). 가장 비슷한 7곳(✓)을 반영비중(가중치)대로 평균한 값이 확정값이며, 모델이 다른 수치를 적었더라도 위젯 값이 적용됩니다.':hasCtx?'위젯 후보 10곳의 객관 6항목 + 모델의 ①상권유형 판정으로 가중치를 고정 계산했습니다.':'이 결과는 프롬프트를 만든 화면과 다른 세션에서 열려 위젯 후보 정보가 없습니다. 결과 JSON의 가중치가 표기된 일치 개수 범위 안에 있는지만 검증했습니다.')+'</div>';
     rc.rows.forEach(function(x){
       var col=x.used?'#085041':'#999';
       rcH+='<div style="font-size:11px;padding:5px 0;border-bottom:.5px solid #eee;color:'+col+'"><b>'+(x.used?'✓ ':'· ')+x.name+'</b> · 가중치 '+(x.weight!==undefined?x.weight:'-')+(x.detail?' · '+x.detail:'')
@@ -1830,7 +1840,7 @@ function renderResult(r){
     +'</div>'
 
     +'<div class="card"><div class="card-title">🏪 참조 유사 가맹점 <span style="font-size:10px;background:#EEF2FF;color:#3B4FB0;border-radius:6px;padding:2px 7px;margin-left:4px">2021년↑ '+STORES_107.length+'개 실매출 · 객관 6항목 + 상권유형 대조</span></div><div class="store-list">'+stH+'</div></div>'
-    +(rcH?'<div class="card"><div class="card-title">🧮 위젯 재계산 검증 (v9.4)</div>'+rcH+'</div>':'')
+    +(rcH?'<div class="card"><div class="card-title">🧮 위젯 재계산 검증 (v9.7)</div>'+rcH+'</div>':'')
     +(brH?'<div class="card"><div class="card-title">🏷️ 인근 벌툰 가맹점</div>'+brH+'</div>':'')
     +(catH?'<div class="card"><div class="card-title">📊 상권 종합 점수</div><div class="cat-grid">'+catH+'</div></div>':'')
     +(vlH?'<div class="card"><div class="card-title">🔍 검증 로그 (실제 검색 근거)</div>'+vlH+'</div>':'')
