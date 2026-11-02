@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>벌툰 상권 분석기 v10.5</title>
+<title>벌툰 상권 분석기 v10.6</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f4f4f6;color:#1d1d1f;padding:14px;min-height:100vh}
@@ -144,7 +144,7 @@ textarea{resize:vertical;min-height:90px;font-size:12px;font-family:'Menlo','Mon
     <div class="logo">🐝</div>
     <div>
       <div class="brand">벌툰 상권 분석기
-        <span class="badge bv">v10.5</span>
+        <span class="badge bv">v10.6</span>
         <span class="badge bchat">채팅 연동형</span>
         <span class="badge bnew">실매출 적용</span>
       </div>
@@ -302,6 +302,8 @@ function cityTier(r1, r2){
   if(/^인천/.test(r1)) return '수도권대도시';
   if(/^경기/.test(r1)) return BIG_METRO.indexOf(city)!==-1?'수도권대도시':'수도권중소도시';
   if(/^(부산|대구|대전|광주광역|울산)/.test(r1)) return '지방광역시';
+  // v10.6: 2026 행정통합(예: 전남광주통합특별시) — 통합특별시의 자치구(옛 광역시 구)는 지방광역시, 시·군은 기존 기준
+  if(/통합특별시/.test(r1) && /구$/.test(city)) return '지방광역시';
   return LOCAL_BIG.indexOf(city)!==-1?'지방대도시':'지방중소도시';
 }
 
@@ -1414,7 +1416,7 @@ function generatePrompt(){
     +'  ✅ 모델 추가 과제(가족 고객층): 반경 500m 대단지 아파트의 준공·입주 연도를 웹검색(\'[아파트명] 준공\', \'[아파트명] 입주\')으로 확인해 입주 5년 이내 신축 대단지 여부를 [C]가족 판정과 verdict에 반영할 것\n'
     +'  ✅ 모델의 역할: 위 수치·등급·참조매장은 그대로 JSON에 옮기고, 고객층 판정·경쟁업체 영업 확인·입지 리스크·verdict 등 정성 분석만 작성\n\n';
   }
-  var p='벌툰 상권 분석을 요청합니다. 2026년 최신 기준으로 웹 검색 후 분석하세요. [v4.19 · 위젯 v10.5]\n\n'
+  var p='벌툰 상권 분석을 요청합니다. 2026년 최신 기준으로 웹 검색 후 분석하세요. [v4.20 · 위젯 v10.6]\n\n'
     +'분석 주소: "'+addr+'"\n'
     +'입점 면적: '+area+'평\n'
     +'월 임대료: '+rentStr+'\n'
@@ -1965,7 +1967,7 @@ function renderResult(r){
     +(vlH?'<div class="card"><div class="card-title">🔍 검증 로그 (실제 검색 근거)</div>'+vlH+'</div>':'')
     +'<div class="summary-card"><div class="sum-text">'+r.location_summary+'</div><div class="tag-lbl">핵심 강점</div><div class="tags">'+strH+'</div><div class="tag-lbl">주요 리스크</div><div class="tags">'+rkH+'</div></div>'
     +(detH?'<div class="card"><div class="card-title">🔍 세부 분석</div><div class="det-list">'+detH+'</div></div>':'')
-    +'<div class="note"><b>v10.5 · 📅 2026년 최신 · 브랜드거리: '+STORES_ALL.length+'개 / 예상매출: 2021년↑ '+STORES_107.length+'개 실매출 · 참조 프로파일 '+REF_PROFILES_DATE+' 고정</b><br>'
+    +'<div class="note"><b>v10.6 · 📅 2026년 최신 · 브랜드거리: '+STORES_ALL.length+'개 / 예상매출: 2021년↑ '+STORES_107.length+'개 실매출 · 참조 프로파일 '+REF_PROFILES_DATE+' 고정</b><br>'
     +'수익공식: 순수익 = 월매출 × 56% - 임대료 (고정지출 44% 자동 차감)<br>'
     +'등급: C(500만↓ 입점불가) · +(500~1천) · A(1천~1.5천) · A+(1.5천~2천) · AA… M=메인입지 접두사<br>'
     +'참조선정: 위젯 후보 10곳(객관 6항목 자동 대조) → ①상권유형 판정 → 7항목 고정 가중치 · 평수 보정 지수 0.85<br>'
