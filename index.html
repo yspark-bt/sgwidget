@@ -148,7 +148,7 @@ textarea{resize:vertical;min-height:90px;font-size:12px;font-family:'Menlo','Mon
         <span class="badge bchat">채팅 연동형</span>
         <span class="badge bnew">실매출 적용</span>
       </div>
-      <div class="sub">📅 2026-10-15 · 2021년↑ 오픈 108개점 실매출(25.11~26.10) · 사이트 자체 예상매출 엔진(v10.5 · 같은 권역 우선 + 상권 규모 조정 + 고객층 기준) · 고정지출 44% 적용</div>
+      <div class="sub">📅 2026-10-15 · 2021년↑ 오픈 108개점 실매출(25.11~26.10) · 사이트 자체 예상매출 엔진(v10.6 · 같은 권역 우선 + 상권 규모 조정 + 고객층 기준) · 고정지출 44% 적용</div>
     </div>
   </div>
 
@@ -168,7 +168,7 @@ textarea{resize:vertical;min-height:90px;font-size:12px;font-family:'Menlo','Mon
 
       <!-- 수익 계산식 안내 -->
       <div class="formula-box">
-        <div class="formula-title">💡 수익 계산 공식 · 등급 기준 (v10.5)</div>
+        <div class="formula-title">💡 수익 계산 공식 · 등급 기준 (v10.6)</div>
         <div class="formula-text">순수익 = 예상 월매출 × 56% - 월 임대료  (고정지출 44% 자동 차감)
 C 입점불가: 500만원 미만 (메인 입지 여부 무관)
 M접두사: 메인 입지 확인 시 / 1,000만원당 A / 500만원당 +
@@ -749,7 +749,7 @@ function renderForecastCard(fc){
     return '<div style="font-size:11px;padding:6px 0;border-bottom:.5px solid #eee"><b>'+(i+1)+'. '+x.name+'</b> · '+FC_TIER_LABEL[x.ref.tier]+(x.cross?' <span style="color:#3B4FB0">(매출수준 보정 ×'+x.geoFactor.toFixed(2)+')</span>':'')+' · '+x.area+'평 · 반영비중 '+x.wpct+'% · 보정매출 '+fmt(x.adj)
       +'<div style="color:#1D9E75">닮은 점: '+x.same.join(', ')+'</div><div style="color:#B4570A">다른 점: '+x.gap.join(', ')+'</div></div>';
   }).join('');
-  el.innerHTML='<div class="card"><div class="card-title">🏁 사이트 자동 예측 (v10.5 · Claude 판단 없이 산출)</div>'
+  el.innerHTML='<div class="card"><div class="card-title">🏁 사이트 자동 예측 (v10.6 · Claude 판단 없이 산출)</div>'
     +'<div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:12px;background:'+gv.bg+';border:.5px solid '+gv.bc+';margin-bottom:10px">'
     +'<div style="font-size:40px;font-weight:900;color:'+gv.tc+'">'+fc.grade+'</div>'
     +'<div style="font-size:12px;line-height:1.7">예상 월매출 <b>'+fmt(fc.adjusted)+'</b><br>50% 범위 '+fmt(fc.range50[0])+' ~ '+fmt(fc.range50[1])+' · 80% 범위 '+fmt(fc.range80[0])+' ~ '+fmt(fc.range80[1])
@@ -764,7 +764,7 @@ function renderForecastCard(fc){
       +'<br><span style="color:#888">커플=핵심 프랜차이즈·카페·영화관 / 학생=중·고교·보드게임카페·마라탕 / 가족=키즈카페·초등학교·아파트 단지 / 규모=500m 상가·300m·1km 음식·카페</span></div>':'')
     +(fc.warnings.length?'<div style="font-size:11px;color:#B4570A;margin-bottom:8px">⚠️ '+fc.warnings.join('<br>⚠️ ')+'</div>':'')
     +'<div style="font-size:12px;font-weight:600;margin:6px 0">상권 성격·규모가 가장 비슷한 가맹점 '+fc.neighbors.length+'곳'+(fc.crossN?' (다른 지역 '+fc.crossN+'곳 포함)':'')+'</div>'+nbH
-    +'<div style="font-size:10px;color:#999;margin-top:8px;line-height:1.6">선정 방식(v10.5): 상권 규모·업종 구성·시설 13개 항목이 가까운 순서로 고르되 같은 권역 매장을 우선(다른 권역은 상권이 확실히 더 비슷할 때만, 그 매장에만 권역 매출 수준 보정). 핵심 속성 5개 중 2개 이상 다른 매장은 제외. 분석지 상권이 유사 매장보다 작으면 규모 차이만큼 매출을 낮춤(상권 규모 2배당 약 13%).'
+    +'<div style="font-size:10px;color:#999;margin-top:8px;line-height:1.6">선정 방식(v10.6): 상권 규모·업종 구성·시설 13개 항목이 가까운 순서로 고르되 같은 권역 매장을 우선(다른 권역은 상권이 확실히 더 비슷할 때만, 그 매장에만 권역 매출 수준 보정). 핵심 속성 5개 중 2개 이상 다른 매장은 제외. 분석지 상권이 유사 매장보다 작으면 규모 차이만큼 매출을 낮춤(상권 규모 2배당 약 13%).'
     +'<br>백테스트('+FC_BT.date+', 기존 '+FC_BT.n+'곳을 나머지 매장으로 예측): 오차 중앙값 '+FC_BT.mdape+'% · ±30% 이내 '+FC_BT.w30+'% · 평균 오차 '+FC_BT.mape+'% (v10.4: '+FC_BT.prev_mdape+'% · '+FC_BT.prev_w30+'% · '+FC_BT.prev_mape+'%). 고객층 기준 보수 추정은 참고값(단독 정확도는 기본 예측보다 낮음)이며, 현장 확인 체크 시 확정값 산정에 사용. 운영 역량·노출도·인테리어는 반영하지 못합니다.</div></div>';
 }
 
@@ -1401,8 +1401,8 @@ function generatePrompt(){
   if(fcRes){
     semasBlockStr += '  · 주요상권(소진공 공식 상권): '+(SEMAS_RESULT.zone_in?('분석지가 \''+SEMAS_RESULT.zone_in_name+'\' 상권 경계 안('+Math.round(SEMAS_RESULT.zone_in_area/1000)+'천㎡)'):'분석지는 공식 주요상권 경계 밖')
       +(SEMAS_RESULT.zone_n?' · 반경 500m 내 상권 '+SEMAS_RESULT.zone_n+'곳('+SEMAS_RESULT.zone_names.join(', ')+')':'')+'\n';
-    simSectionStr = '【예상매출 — 사이트 자동 산출 확정값(v10.5) · 아래 STEP 3 수동 계산 규칙보다 우선 · 모델 재계산·수정 금지】\n'
-      +'  · 방식(v10.5 같은 권역 우선 + 상권 성격·규모 + 규모 조정): 상권 규모·업종 구성·시설 13개 항목이 가장 비슷하고 핵심 속성 5개 중 4개 이상 같은 가맹점(최대 '+FC_K+'곳)의 실매출(평수 보정)을 가중평균. 같은 권역 매장을 우선하고, 다른 권역 매장은 상권이 확실히 더 비슷할 때만 포함하며 그 매장에만 권역 매출 수준 보정 — 기존 '+FC_DATA.ref.length+'곳 대상\n'
+    simSectionStr = '【예상매출 — 사이트 자동 산출 확정값(v10.6) · 아래 STEP 3 수동 계산 규칙보다 우선 · 모델 재계산·수정 금지】\n'
+      +'  · 방식(v10.6 같은 권역 우선 + 상권 성격·규모 + 규모 조정): 상권 규모·업종 구성·시설 13개 항목이 가장 비슷하고 핵심 속성 5개 중 4개 이상 같은 가맹점(최대 '+FC_K+'곳)의 실매출(평수 보정)을 가중평균. 같은 권역 매장을 우선하고, 다른 권역 매장은 상권이 확실히 더 비슷할 때만 포함하며 그 매장에만 권역 매출 수준 보정 — 기존 '+FC_DATA.ref.length+'곳 대상\n'
       +'  · 백테스트: 오차 중앙값 '+FC_BT.mdape+'% · ±30% 이내 '+FC_BT.w30+'%\n'
       +'  · base_monthly_sales: '+fcRes.base+' → × 층수 '+fp+' × 브랜드 '+brand.penalty+' → adjusted_monthly_sales: '+fcRes.adjusted+'\n'
       +'  · 50% 범위 '+fcRes.range50[0]+' ~ '+fcRes.range50[1]+' · 80% 범위 '+fcRes.range80[0]+' ~ '+fcRes.range80[1]+'\n'
@@ -1961,7 +1961,7 @@ function renderResult(r){
     +'</div>'
 
     +'<div class="card"><div class="card-title">🏪 참조 유사 가맹점 <span style="font-size:10px;background:#EEF2FF;color:#3B4FB0;border-radius:6px;padding:2px 7px;margin-left:4px">2021년↑ '+STORES_107.length+'개 실매출 · 객관 6항목 + 상권유형 대조</span></div><div class="store-list">'+stH+'</div></div>'
-    +(rcH?'<div class="card"><div class="card-title">🧮 위젯 재계산 검증 (v10.5)</div>'+rcH+'</div>':'')
+    +(rcH?'<div class="card"><div class="card-title">🧮 위젯 재계산 검증 (v10.6)</div>'+rcH+'</div>':'')
     +(brH?'<div class="card"><div class="card-title">🏷️ 인근 벌툰 가맹점</div>'+brH+'</div>':'')
     +(catH?'<div class="card"><div class="card-title">📊 상권 종합 점수</div><div class="cat-grid">'+catH+'</div></div>':'')
     +(vlH?'<div class="card"><div class="card-title">🔍 검증 로그 (실제 검색 근거)</div>'+vlH+'</div>':'')
