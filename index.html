@@ -3,15 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>벌툰 상권 분석기 v11.0</title>
+<title>벌툰 상권 분석기 v10.8</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-[hidden]{display:none!important}
-.go-btn{display:block;width:100%;padding:15px;border:none;border-radius:12px;background:#3B4FB0;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px}
-.go-btn:hover{background:#2f3f94}
-.go-btn:focus-visible,.btn-link:focus-visible{outline:3px solid #9BB0F0;outline-offset:2px}
-.btn-link{background:none;border:none;color:#3B4FB0;font-size:11px;text-decoration:underline;cursor:pointer;padding:0}
-.v11-status{font-size:12px;line-height:1.6;color:#3B4FB0;background:#EEF2FF;border:.5px solid #9BB0F0;border-radius:10px;padding:10px 12px;margin-bottom:12px}
 body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f4f4f6;color:#1d1d1f;padding:14px;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
 .wrap{width:100%;max-width:740px;margin:0 auto}
 .hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px}
@@ -150,11 +144,11 @@ textarea{resize:vertical;min-height:90px;font-size:12px;font-family:'Menlo','Mon
     <div class="logo">🐝</div>
     <div>
       <div class="brand">벌툰 상권 분석기
-        <span class="badge bv">v11.0</span>
+        <span class="badge bv">v10.8</span>
         <span class="badge bchat">채팅 연동형</span>
         <span class="badge bnew">실매출 적용</span>
       </div>
-      <div class="sub">📅 2026-11-17 · 2021년↑ 오픈 108개점 실매출(25.11~26.10) · 사이트 자체 예상매출 엔진(v11.0 · 같은 권역 우선 + 상권 규모 조정 + 고객층 기준 + 권역 보정 하한 0.6) · 고정지출 44% 적용</div>
+      <div class="sub">📅 2026-11-17 · 2021년↑ 오픈 108개점 실매출(25.11~26.10) · 사이트 자체 예상매출 엔진(v10.8 · 같은 권역 우선 + 상권 규모 조정 + 고객층 기준 + 권역 보정 하한 0.6) · 고정지출 44% 적용</div>
     </div>
   </div>
 
@@ -174,7 +168,7 @@ textarea{resize:vertical;min-height:90px;font-size:12px;font-family:'Menlo','Mon
 
       <!-- 수익 계산식 안내 -->
       <div class="formula-box">
-        <div class="formula-title">💡 수익 계산 공식 · 등급 기준 (v11.0)</div>
+        <div class="formula-title">💡 수익 계산 공식 · 등급 기준 (v10.8)</div>
         <div class="formula-text">순수익 = 예상 월매출 × 56% - 월 임대료  (고정지출 44% 자동 차감)
 C 입점불가: 500만원 미만 (메인 입지면 MC)
 M접두사: 메인 입지 확인 시 / 1,000만원당 A / 500만원당 +
@@ -213,7 +207,7 @@ M접두사: 메인 입지 확인 시 / 1,000만원당 A / 500만원당 +
         <div class="formula-result" id="previewText"></div>
       </div>
 
-      <button class="btn-primary" id="mainGenBtn" onclick="handleGeneratePrompt()">📋 STEP 2 — 분석 준비 (상권 데이터 조회 + 예상매출 계산)</button>
+      <button class="btn-primary" id="mainGenBtn" onclick="handleGeneratePrompt()">📋 STEP 2 — 분석 프롬프트 생성</button>
     </div>
   </div>
 
@@ -222,27 +216,22 @@ M접두사: 메인 입지 확인 시 / 1,000만원당 A / 500만원당 +
     <div id="forecastBox"></div>
     <div class="card">
       <div class="card-title">📋 STEP 2 — (선택) Claude 정성 분석 프롬프트 · 예상매출·등급은 위 자동 예측값이 확정값</div>
-      <button class="go-btn" id="goClaudeBtn" onclick="goClaude()">🚀 Claude에서 분석하기 (프롬프트 자동 복사 + Claude 열기)</button>
-      <div class="v11-status" id="v11Status">버튼을 누른 뒤 Claude 창에서 <b>Ctrl+V → 전송</b>하세요. 답변이 나오면 <b>답변 전체를 복사</b>하고 이 탭으로 돌아오면 결과가 자동으로 표시됩니다.</div>
-      <div style="font-size:11px;color:#888;margin:-4px 0 12px;line-height:1.6">열리는 Claude 주소: <span id="claudeUrlView"></span> · <button class="btn-link" onclick="toggleUrlSet()">변경</button>
-        <div id="urlSetBox" hidden style="margin-top:6px"><input type="text" id="iClaudeUrl" placeholder="예: https://claude.ai/project/... (상권 분석 위젯 프로젝트 주소)" style="width:100%;padding:8px 10px;border:.5px solid #ccc;border-radius:8px;font-size:12px"><button class="btn-link" style="margin-top:4px" onclick="saveClaudeUrl()">저장</button></div>
-      </div>
       <div class="prompt-box">
-        <div class="prompt-label">🐝 Claude 분석 요청 프롬프트 (버튼이 자동으로 복사합니다 · 직접 복사도 가능)</div>
+        <div class="prompt-label">🐝 Claude 분석 요청 프롬프트 (복사 후 이 채팅창에 붙여넣기)</div>
         <div class="prompt-text" id="promptText"></div>
         <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">복사</button>
       </div>
       <div class="guide-box">
         <div class="guide-title">📌 사용 방법</div>
-        <div class="guide-step"><div class="guide-num">1</div><div><b>🚀 Claude에서 분석하기</b>를 누르면 프롬프트가 복사되고 Claude가 새 탭으로 열립니다</div></div>
-        <div class="guide-step"><div class="guide-num">2</div><div>Claude 입력창에 <b>Ctrl+V 후 전송</b></div></div>
-        <div class="guide-step"><div class="guide-num">3</div><div>분석이 끝나면 <b>답변 아래 복사 버튼</b>으로 답변 전체를 복사 (요약이 섞여 있어도 됩니다)</div></div>
-        <div class="guide-step"><div class="guide-num">4</div><div>이 탭으로 돌아오면 <b>자동으로 결과 표시</b> · 안 되면 이 화면 아무 곳에서나 <b>Ctrl+V</b></div></div>
+        <div class="guide-step"><div class="guide-num">1</div><div>위 프롬프트를 <b>복사</b>하세요</div></div>
+        <div class="guide-step"><div class="guide-num">2</div><div>이 위젯 아래 <b>Claude 채팅 입력창</b>에 붙여넣고 전송</div></div>
+        <div class="guide-step"><div class="guide-num">3</div><div>Claude가 분석 후 <b>JSON을 출력</b>합니다</div></div>
+        <div class="guide-step"><div class="guide-num">4</div><div>출력된 JSON을 아래 입력창에 <b>붙여넣고 시각화</b></div></div>
       </div>
     </div>
     <div class="card">
       <div class="card-title">📊 STEP 3 — Claude가 출력한 JSON 붙여넣기</div>
-      <textarea id="jsonInput" placeholder='자동 표시가 안 될 때만 Claude 답변을 여기에 붙여넣으세요 (붙여넣으면 바로 시각화됩니다)'></textarea>
+      <textarea id="jsonInput" placeholder='Claude가 출력한 JSON을 여기에 붙여넣으세요...'></textarea>
       <button class="btn-secondary" onclick="visualize()">📊 결과 시각화</button>
       <button class="btn-reset" onclick="resetForm()">← 처음으로</button>
     </div>
@@ -341,7 +330,7 @@ function catParams(code,lat,lon,r){ return {category_group_code:code,x:lon,y:lat
 function computeSiteProfile(lat, lon, key){
   var C='/v2/local/search/category.json', K='/v2/local/search/keyword.json';
   var jobs = {
-    cin: kakaoPaged(K, {query:'영화관',category_group_code:'CT1',x:lon,y:lat,radius:500,sort:'distance'}, key),   // v11.0: 문화시설 15건 한도에 영화관이 밀려 누락되던 문제 수정
+    cin: kakaoPaged(K, {query:'영화관',category_group_code:'CT1',x:lon,y:lat,radius:500,sort:'distance'}, key),   // v10.8: 문화시설 15건 한도에 영화관이 밀려 누락되던 문제 수정
     sc:  kakaoPaged(C, catParams('SC4',lat,lon,1000), key),
     ac:  kakaoPaged(C, catParams('AC5',lat,lon,500), key),
     apt: kakaoPaged(K, {query:'아파트',x:lon,y:lat,radius:500,sort:'distance'}, key),
@@ -350,7 +339,7 @@ function computeSiteProfile(lat, lon, key){
     ce:  kakaoGet(C, catParams('CE7',lat,lon,300), key),
     rg:  kakaoGet('/v2/local/geo/coord2regioncode.json', {x:lon,y:lat}, key),
     mt1k: kakaoGet(C, catParams('MT1',lat,lon,1000), key),   // v9.8: 1km 대형마트
-    ct1k: kakaoPaged(K, {query:'영화관',category_group_code:'CT1',x:lon,y:lat,radius:1000,sort:'distance'}, key),   // v11.0: 1km 영화관(키워드+업종 필터)
+    ct1k: kakaoPaged(K, {query:'영화관',category_group_code:'CT1',x:lon,y:lat,radius:1000,sort:'distance'}, key),   // v10.8: 1km 영화관(키워드+업종 필터)
     fd1k: kakaoGet(C, catParams('FD6',lat,lon,1000), key),   // v9.8: 1km 음식점
     ce1k: kakaoGet(C, catParams('CE7',lat,lon,1000), key),   // v9.8: 1km 카페
     kids: kakaoPaged(K, {query:'키즈카페',x:lon,y:lat,radius:500,sort:'distance'}, key),   // v10.5: 가족 — 키즈카페
@@ -762,7 +751,7 @@ function renderForecastCard(fc){
     return '<div style="font-size:11px;padding:6px 0;border-bottom:.5px solid #eee"><b>'+(i+1)+'. '+x.name+'</b> · '+FC_TIER_LABEL[x.ref.tier]+(x.cross?' <span style="color:#3B4FB0">(매출수준 보정 ×'+x.geoFactor.toFixed(2)+')</span>':'')+' · '+x.area+'평 · 반영비중 '+x.wpct+'% · 보정매출 '+fmt(x.adj)
       +'<div style="color:#1D9E75">닮은 점: '+x.same.join(', ')+'</div><div style="color:#B4570A">다른 점: '+x.gap.join(', ')+'</div></div>';
   }).join('');
-  el.innerHTML='<div class="card"><div class="card-title">🏁 사이트 자동 예측 (v11.0 · Claude 판단 없이 산출)</div>'
+  el.innerHTML='<div class="card"><div class="card-title">🏁 사이트 자동 예측 (v10.8 · Claude 판단 없이 산출)</div>'
     +'<div style="display:flex;align-items:center;gap:14px;padding:12px;border-radius:12px;background:'+gv.bg+';border:.5px solid '+gv.bc+';margin-bottom:10px">'
     +'<div style="font-size:40px;font-weight:900;color:'+gv.tc+'">'+fc.grade+'</div>'
     +'<div style="font-size:12px;line-height:1.7">예상 월매출 <b>'+fmt(fc.adjusted)+'</b><br>50% 범위 '+fmt(fc.range50[0])+' ~ '+fmt(fc.range50[1])+' · 80% 범위 '+fmt(fc.range80[0])+' ~ '+fmt(fc.range80[1])
@@ -777,7 +766,7 @@ function renderForecastCard(fc){
       +'<br><span style="color:#888">커플=핵심 프랜차이즈·카페·영화관 / 학생=중·고교·보드게임카페·마라탕 / 가족=키즈카페·초등학교·아파트 단지 / 규모=500m 상가·300m·1km 음식·카페</span></div>':'')
     +(fc.warnings.length?'<div style="font-size:11px;color:#B4570A;margin-bottom:8px">⚠️ '+fc.warnings.join('<br>⚠️ ')+'</div>':'')
     +'<div style="font-size:12px;font-weight:600;margin:6px 0">상권 성격·규모가 가장 비슷한 가맹점 '+fc.neighbors.length+'곳'+(fc.crossN?' (다른 지역 '+fc.crossN+'곳 포함)':'')+'</div>'+nbH
-    +'<div style="font-size:10px;color:#999;margin-top:8px;line-height:1.6">선정 방식(v11.0): 상권 규모·업종 구성·시설 13개 항목이 가까운 순서로 고르되 같은 권역 매장을 우선(다른 권역은 상권이 확실히 더 비슷할 때만, 그 매장에만 권역 매출 수준 보정(하한 ×0.6)). 핵심 속성 5개 중 2개 이상 다른 매장은 제외. 분석지 상권이 유사 매장보다 작으면 규모 차이만큼 매출을 낮춤(상권 규모 2배당 약 13%).'
+    +'<div style="font-size:10px;color:#999;margin-top:8px;line-height:1.6">선정 방식(v10.8): 상권 규모·업종 구성·시설 13개 항목이 가까운 순서로 고르되 같은 권역 매장을 우선(다른 권역은 상권이 확실히 더 비슷할 때만, 그 매장에만 권역 매출 수준 보정(하한 ×0.6)). 핵심 속성 5개 중 2개 이상 다른 매장은 제외. 분석지 상권이 유사 매장보다 작으면 규모 차이만큼 매출을 낮춤(상권 규모 2배당 약 13%).'
     +'<br>백테스트('+FC_BT.date+', 기존 '+FC_BT.n+'곳을 나머지 매장으로 예측): 오차 중앙값 '+FC_BT.mdape+'% · ±30% 이내 '+FC_BT.w30+'% · 평균 오차 '+FC_BT.mape+'% (이전 버전: '+FC_BT.prev_mdape+'% · '+FC_BT.prev_w30+'% · '+FC_BT.prev_mape+'%). 고객층 기준 보수 추정은 참고값(단독 정확도는 기본 예측보다 낮음)이며, 현장 확인 체크 시 확정값 산정에 사용. 운영 역량·노출도·인테리어는 반영하지 못합니다.</div></div>';
 }
 
@@ -1166,10 +1155,8 @@ function handleGeneratePrompt(){
 
 function finishGeneratePrompt(btn){
   generatePrompt();
-  V11_WAITING=false; V11_LAST=''; showClaudeUrl();
-  v11Msg('버튼을 누른 뒤 Claude 창에서 Ctrl+V → 전송하세요. 답변이 나오면 답변 전체를 복사하고 이 탭으로 돌아오면 결과가 자동으로 표시됩니다.');
   btn.disabled = false;
-  btn.textContent = '📋 STEP 2 — 분석 준비 (상권 데이터 조회 + 예상매출 계산)';
+  btn.textContent = '📋 STEP 2 — 분석 프롬프트 생성';
 }
 
 function generatePrompt(){
@@ -1292,7 +1279,7 @@ function generatePrompt(){
     ? brand.stores.map(function(s){return s.name+'('+s.dist+'km)'}).join(', ')
     : '없음';
 
-  var simOldStr=''+'【참조 가맹점 유사도 가중치(similarity_weight) — v11.0 프로파일 대조표 방식】\n'
+  var simOldStr=''+'【참조 가맹점 유사도 가중치(similarity_weight) — v10.8 프로파일 대조표 방식】\n'
     +'⚠️ \'느낌상 비슷하다\'로 고르지 말 것 — 아래 7개 항목을 분석지 vs 참조매장으로 하나씩 대조해 점수화할 것\n'
     +'\n'
     +'[1단계] 먼저 분석 주소의 상권 프로파일을 7개 항목으로 확정할 것:\n'
@@ -1335,7 +1322,7 @@ function generatePrompt(){
     LAST_CTX.siteItems=si;
     LAST_CTX.candidates=cands.map(function(c){return {name:c.name,match:c.match,detail:c.detail,cap2:c.cap2};});
     var nm=function(arr){return arr.map(function(x){return x.name+' '+x.distance_m+'m';}).join(', ');};
-    profileBlockStr += '\n【위젯 객관 프로파일 — v11.0 카카오 업종분류 기반 자동 계산 · 참조매장 '+REF_PROFILES.length+'곳과 동일 규칙('+REF_PROFILES_DATE+' 기준)】\n'
+    profileBlockStr += '\n【위젯 객관 프로파일 — v10.8 카카오 업종분류 기반 자동 계산 · 참조매장 '+REF_PROFILES.length+'곳과 동일 규칙('+REF_PROFILES_DATE+' 기준)】\n'
       +'  ②영화관(500m·영업중): '+si.cinema+(sp.cinema.length?' — '+nm(sp.cinema):'')
         +(sp.cinemaClosed.length?' / 휴관·폐관이라 제외: '+sp.cinemaClosed.join(', '):'')+'\n'
       +'  ③중고생 기반: '+si.teen+' — 중·고교(1km) '+sp.school_n+'곳'+(sp.schools.length?' ('+nm(sp.schools.slice(0,4))+')':'')
@@ -1359,7 +1346,7 @@ function generatePrompt(){
         +' · 중고생학원'+rp.ac+' · 단지'+rp.apt+' · 밀도'+rp.d;
     }).join('\n');
 
-    simSectionStr = '【참조 가맹점 선정 — v11.0 위젯 후보 방식(결정적 매칭)】\n'
+    simSectionStr = '【참조 가맹점 선정 — v10.8 위젯 후보 방식(결정적 매칭)】\n'
       +'⛔ 참조매장은 반드시 아래 [위젯 후보 10곳] 안에서만 판정할 것 — 목록 밖 매장은 위젯이 자동 제외함\n'
       +'✅ 후보 순위는 7항목 중 객관 6개(②영화관 ③중고생 ④지하철역 ⑤도시위계 ⑥배후지 ⑦상업밀도)를 위젯이 '+REF_PROFILES.length+'곳 고정 프로파일과 대조해 계산한 결과임\n'
       +'\n'
@@ -1416,8 +1403,8 @@ function generatePrompt(){
   if(fcRes){
     semasBlockStr += '  · 주요상권(소진공 공식 상권): '+(SEMAS_RESULT.zone_in?('분석지가 \''+SEMAS_RESULT.zone_in_name+'\' 상권 경계 안('+Math.round(SEMAS_RESULT.zone_in_area/1000)+'천㎡)'):'분석지는 공식 주요상권 경계 밖')
       +(SEMAS_RESULT.zone_n?' · 반경 500m 내 상권 '+SEMAS_RESULT.zone_n+'곳('+SEMAS_RESULT.zone_names.join(', ')+')':'')+'\n';
-    simSectionStr = '【예상매출 — 사이트 자동 산출 확정값(v11.0) · 아래 STEP 3 수동 계산 규칙보다 우선 · 모델 재계산·수정 금지】\n'
-      +'  · 방식(v11.0 같은 권역 우선 + 상권 성격·규모 + 규모 조정): 상권 규모·업종 구성·시설 13개 항목이 가장 비슷하고 핵심 속성 5개 중 4개 이상 같은 가맹점(최대 '+FC_K+'곳)의 실매출(평수 보정)을 가중평균. 같은 권역 매장을 우선하고, 다른 권역 매장은 상권이 확실히 더 비슷할 때만 포함하며 그 매장에만 권역 매출 수준 보정(하한 ×0.6) — 기존 '+FC_DATA.ref.length+'곳 대상\n'
+    simSectionStr = '【예상매출 — 사이트 자동 산출 확정값(v10.8) · 아래 STEP 3 수동 계산 규칙보다 우선 · 모델 재계산·수정 금지】\n'
+      +'  · 방식(v10.8 같은 권역 우선 + 상권 성격·규모 + 규모 조정): 상권 규모·업종 구성·시설 13개 항목이 가장 비슷하고 핵심 속성 5개 중 4개 이상 같은 가맹점(최대 '+FC_K+'곳)의 실매출(평수 보정)을 가중평균. 같은 권역 매장을 우선하고, 다른 권역 매장은 상권이 확실히 더 비슷할 때만 포함하며 그 매장에만 권역 매출 수준 보정(하한 ×0.6) — 기존 '+FC_DATA.ref.length+'곳 대상\n'
       +'  · 백테스트: 오차 중앙값 '+FC_BT.mdape+'% · ±30% 이내 '+FC_BT.w30+'%\n'
       +'  · base_monthly_sales: '+fcRes.base+' → × 층수 '+fp+' × 브랜드 '+brand.penalty+' → adjusted_monthly_sales: '+fcRes.adjusted+'\n'
       +'  · 50% 범위 '+fcRes.range50[0]+' ~ '+fcRes.range50[1]+' · 80% 범위 '+fcRes.range80[0]+' ~ '+fcRes.range80[1]+'\n'
@@ -1431,7 +1418,7 @@ function generatePrompt(){
     +'  ✅ 모델 추가 과제(가족 고객층): 반경 500m 대단지 아파트의 준공·입주 연도를 웹검색(\'[아파트명] 준공\', \'[아파트명] 입주\')으로 확인해 입주 5년 이내 신축 대단지 여부를 [C]가족 판정과 verdict에 반영할 것\n'
     +'  ✅ 모델의 역할: 위 수치·등급·참조매장은 그대로 JSON에 옮기고, 고객층 판정·경쟁업체 영업 확인·입지 리스크·verdict 등 정성 분석만 작성\n\n';
   }
-  var p='벌툰 상권 분석을 요청합니다. 2026년 최신 기준으로 웹 검색 후 분석하세요. [위젯 v11.0]\n\n'
+  var p='벌툰 상권 분석을 요청합니다. 2026년 최신 기준으로 웹 검색 후 분석하세요. [위젯 v10.8]\n\n'
     +'분석 주소: "'+addr+'"\n'
     +'입점 면적: '+area+'평\n'
     +'월 임대료: '+rentStr+'\n'
@@ -1481,7 +1468,7 @@ function generatePrompt(){
     +'  □ \'[동/로 이름] 롯데리아 버거킹\' 검색\n'
     +'  □ \'[동/로 이름] CGV 메가박스 롯데시네마\' 검색\n'
     +'  □ \'[동/로 이름] 스타벅스\' 검색\n'
-    +'  □ \'[동/로 이름] 중학교 고등학교\' 검색 (⚠️v11.0 기준 카카오API가 1km 기준 자동조회 — API 데이터 없을 때만 웹검색으로 1km 내 학교 확인)\n'
+    +'  □ \'[동/로 이름] 중학교 고등학교\' 검색 (⚠️v10.8 기준 카카오API가 1km 기준 자동조회 — API 데이터 없을 때만 웹검색으로 1km 내 학교 확인)\n'
     +'  □ \'[동/로 이름] 학원가\' 검색 (⚠️반경 500m 기준, 중고생 대상 학원인지 확인 — 성인 대상 학원은 제외)\n'
     +'  □ \'[동/로 이름] 아파트 단지\' 검색\n'
     +'  □ \'[동/로 이름] 놀숲\' 검색 (만화카페 경쟁브랜드)\n'
@@ -1553,29 +1540,29 @@ function generatePrompt(){
     +'     ★보통: 영화관은 없으나 카페·올리브영·패스트푸드 등 데이트 관련 시설이 여러 개 있어 부분적 데이트 코스 성립\n'
     +'     ★약함: 영화관 없고 카페·소비시설도 산발적이거나 1~2개뿐 → 일부러 데이트하러 올 이유가 없는 지역\n'
     +'     ⚠️ 올리브영·스타벅스 몇 개 있다고 자동으로 \'강함\' 금지 — 영화관 부재 시 최대 \'보통\'까지만 부여\n'
-    +'     ✅ v11.0: 영화관은 [위젯 객관 프로파일]의 \'영업중\' 영화관만 인정 — 휴관·폐관 표기 영화관은 제외, 상호에 CGV가 들어간 카셰어링·주차장 등은 위젯이 업종분류로 이미 제거함\n'    +'  [B] 중·고등학생: ⚠️ 학원과 학교의 판정 반경이 다름 — 반드시 구분해서 확인할 것\n'
+    +'     ✅ v10.8: 영화관은 [위젯 객관 프로파일]의 \'영업중\' 영화관만 인정 — 휴관·폐관 표기 영화관은 제외, 상호에 CGV가 들어간 카셰어링·주차장 등은 위젯이 업종분류로 이미 제거함\n'    +'  [B] 중·고등학생: ⚠️ 학원과 학교의 판정 반경이 다름 — 반드시 구분해서 확인할 것\n'
     +'     · 학원(중고생 대상): 반경 500m 이내 기준 — 학원은 수업 전후 짧게 들르는 동선이라 근접해야 유효\n'
     +'     · 중·고등학교: 반경 1km 이내 기준 — 학생은 하교 후 1km 정도는 충분히 이동하므로 500m로 좁히면 과소평가됨\n'
     +'     ★강함: 반경 1km 내 중·고교 존재 + 반경 500m 내 중고생 대상 학원 존재 (둘 다 충족)\n'
     +'     ★보통: 둘 중 하나만 충족 (학교만 있거나, 학원만 있는 경우)\n'
     +'     ★약함: 반경 1km 내 중·고교 없고, 반경 500m 내 중고생 학원도 없음\n'
     +'     ⚠️ 학원 판정 시 성인 대상 학원(공무원·기술사·자격증·댄스·실용음악 등)은 중고생 수요로 인정하지 말 것 — 입시·보습·영어·수학 등 중고생 대상 학원만 유효\n'
-    +'     ✅ v11.0: 학원은 [위젯 객관 프로파일]의 \'중고생 대상 학원 추정 수\'로 판정 — 3곳 이상이면 학원 기반 있음(최근접 1곳만 보고 판정 금지)\n'
-    +'     ✅ v11.0: [B]고객층 판정에는 [소상공인 상가정보]의 입시·교과+외국어학원 수도 근거로 사용 — 카카오 추정치 또는 소진공 수 중 하나라도 3곳 이상이면 학원 기반 있음(단, 참조매장 대조 ③은 참조매장과 같은 카카오 기준 유지)\n'
-    +'     ✅ v11.0 기준 카카오 API가 중·고교 항목을 반경 1km 기준으로 자동 조회함 — 위젯 데이터에 결과가 있으면 그대로 신뢰하고 재검색 불필요\n'
-    +'     ⚠️ 단, 위젯 카카오 API 데이터가 없거나 실패한 경우에만 웹검색으로 반경 1km 내 중·고교를 직접 확인할 것\n'    +'  [C] 어린 자녀 동반 가족: 반경 500m 내 아파트단지·키즈카페·마트·공원 등 가족시설 집중 여부\n'    +'→ [A][B][C] 각각 "강함/보통/약함" 판정 — 반드시 500m 내 실제 시설 근거 명시\n'    +'⚠️ STEP 0.5 개별 검색 결과 기반으로만 판정. 검색 안 하고 \'약함\'으로 단정하는 것 금지\n'    +'⚠️ \'약함\' 판정 시 어떤 검색어로 확인했는지 detail 필드에 명시 필수\n'    +'→ 2개 이상 강함=high / 1개만 강함=mid / 모두 약함=low → 체류수요인구 점수 반영\n\n'    +'━━━━━━━━━━━━━━━━\n'    +'【STEP 3】참조 가맹점 선정 및 매출 계산 (v11.0 실매출·고정 프로파일 기반)\n'
+    +'     ✅ v10.8: 학원은 [위젯 객관 프로파일]의 \'중고생 대상 학원 추정 수\'로 판정 — 3곳 이상이면 학원 기반 있음(최근접 1곳만 보고 판정 금지)\n'
+    +'     ✅ v10.8: [B]고객층 판정에는 [소상공인 상가정보]의 입시·교과+외국어학원 수도 근거로 사용 — 카카오 추정치 또는 소진공 수 중 하나라도 3곳 이상이면 학원 기반 있음(단, 참조매장 대조 ③은 참조매장과 같은 카카오 기준 유지)\n'
+    +'     ✅ v10.8 기준 카카오 API가 중·고교 항목을 반경 1km 기준으로 자동 조회함 — 위젯 데이터에 결과가 있으면 그대로 신뢰하고 재검색 불필요\n'
+    +'     ⚠️ 단, 위젯 카카오 API 데이터가 없거나 실패한 경우에만 웹검색으로 반경 1km 내 중·고교를 직접 확인할 것\n'    +'  [C] 어린 자녀 동반 가족: 반경 500m 내 아파트단지·키즈카페·마트·공원 등 가족시설 집중 여부\n'    +'→ [A][B][C] 각각 "강함/보통/약함" 판정 — 반드시 500m 내 실제 시설 근거 명시\n'    +'⚠️ STEP 0.5 개별 검색 결과 기반으로만 판정. 검색 안 하고 \'약함\'으로 단정하는 것 금지\n'    +'⚠️ \'약함\' 판정 시 어떤 검색어로 확인했는지 detail 필드에 명시 필수\n'    +'→ 2개 이상 강함=high / 1개만 강함=mid / 모두 약함=low → 체류수요인구 점수 반영\n\n'    +'━━━━━━━━━━━━━━━━\n'    +'【STEP 3】참조 가맹점 선정 및 매출 계산 (v10.8 실매출·고정 프로파일 기반)\n'
     +'━━━━━━━━━━━━━━━━\n'
     +'⚠️ 브랜드 근접 가맹점: 위젯이 '+STORES_ALL.length+'개 전체 좌표 기반으로 이미 계산 완료\n'
     +'   → brand_penalty: '+brand.penalty+' ('+brandDesc+')\n'
     +'   → 7km 내 가맹점: '+brandStoreStr+'\n\n'
     +'⚠️ 예상매출 참조 가맹점 선정: 2021년↑ 오픈 '+STORES_107.length+'개 실매출 기준\n\n'
-    +'【참조 가맹점 선정 기준 — v11.0】\n'
+    +'【참조 가맹점 선정 기준 — v10.8】\n'
     +'★ 1순위(핵심): 상권 유형 — 가장 중요한 기준\n'
     +'  ↳ 번화가(유흥·쇼핑 중심) / 대학가 / 역세권 / 주거근린 / 신도시 근린상가 / 오피스 등\n'
     +'  ↳ 단순 명칭이 아닌 실질 집객 방식·고객층 패턴이 동일한 상권 유형 선택\n'
     +'  ↳ 구도심(원도심) 여부도 함께 판단할 것 — 신도시형 대단지 배후 상권과 구도심 상권은 배후 인구 구성·소비 패턴이 다르므로 반드시 구분\n'
     +'\n'
-    +'🔒 【\'신도시\' 용어 엄격 정의 — v11.0 필수】\n'
+    +'🔒 【\'신도시\' 용어 엄격 정의 — v10.8 필수】\n'
     +'  ✅ 신도시로 분류 가능: 배후 아파트단지와 그 단지 상가가 준공·입주 시작 후 5년 이내인 곳만\n'
     +'  ⛔ 입주 5년 초과한 지역은 \'신도시\'로 절대 분류 금지 — 아무리 계획도시로 조성됐어도 성숙기에 접어든 기성 주거지임\n'
     +'  ⛔ 오분류 사례: 분당·일산 등 1990년대 1기 신도시는 30년 넘은 지역이므로 \'신도시 근린상가\'가 아니라 \'기성 주거지 역세권/근린상가\'로 분류할 것\n'
@@ -1594,12 +1581,12 @@ function generatePrompt(){
     +'⚠️ 【평수 기준 — 반드시 바닥+복층 합산 총 평수】\n'
     +'  ↳ 벌툰은 복층 다다미룸 구조로, 방(룸) 개수가 많을수록 매출이 비례해 커지는 업종 특성\n'
     +'  ↳ 분석 대상 입점 평수·참조 가맹점 평수 모두 반드시 \'바닥+복층 합산\' 총 평수로 비교할 것\n'
-    +'  ↳ ✅ v11.0 기준 위젯 내장 참조 매장 143개 전체 실제 바닥+복층 합산 평수로 교정 완료(예: 방이점 63→81평)\n'
+    +'  ↳ ✅ v10.8 기준 위젯 내장 참조 매장 143개 전체 실제 바닥+복층 합산 평수로 교정 완료(예: 방이점 63→81평)\n'
     +'  ↳ ✅ 폐점 확인된 연신내로데오점·울진본점·화명역점은 참조 매장 목록에서 완전히 제거됨\n\n'
     +'⛔ 최악의 실수 사례④: 실제로 검증 안 된 속성(예: 역세권 아닌데 \'역세권\'이라고 기재)을 similarity_reason에 근거로 넣음 — 반드시 실제로 확인된 일치 요소만 기재\n'
     +'\n'
     +simSectionStr
-    +'【참조 가맹점 평수 보정(area_adjusted_sales) — v11.0 신규 필수】\n'
+    +'【참조 가맹점 평수 보정(area_adjusted_sales) — v10.8 신규 필수】\n'
     +'🔒 순서 원칙 — 반드시 이 순서를 지킬 것:\n'
     +'  1단계: 1순위(상권유형·구도심여부)·2순위(상권규모) 기준으로 분석 주소와 명확히 일치하는 참조매장을 먼저 선정\n'
     +'  2단계: 그렇게 선정된 매장들끼리 평수 차이가 있을 때만, 아래 공식으로 평수 비례 보정 적용\n'
@@ -1615,7 +1602,7 @@ function generatePrompt(){
     +'   base_monthly_sales = Σ(area_adjusted_sales × similarity_weight) ÷ Σ(similarity_weight)\n'
     +'   예) 보정후매출 5000만(가중치1.0), 4000만(가중치0.8), 3000만(가중치0.6) → (5000×1.0+4000×0.8+3000×0.6)/(1.0+0.8+0.6) = 9000/2.4 = 3750만\n'
     +'층수보정: 지하=0.90/1~3층=1.00/4~5층=0.95/6층+=0.90 → 현재 '+fp+'\n'
-    +'브랜드보정(위젯 계산 확정 — v11.0: 2km 이내만 적용): '+brand.penalty+' → 직선거리 1km미만=0.90/1~2km=0.95/2km초과=1.00(패널티없음)\n'
+    +'브랜드보정(위젯 계산 확정 — v10.8: 2km 이내만 적용): '+brand.penalty+' → 직선거리 1km미만=0.90/1~2km=0.95/2km초과=1.00(패널티없음)\n'
     +'입지보정: 메인=1.05/주거형=0.95/외각=0.90\n\n'
     +'보정 계산: base × '+fp+' × '+brand.penalty+' × location_penalty = adjusted\n\n'
     +'【2021년↑ '+STORES_107.length+'개 실매출 데이터】(가맹점명/평수/25.11~26.10 12개월 월평균매출)\n'
@@ -1734,70 +1721,6 @@ function copyPrompt(){
 }
 
 // ── STEP 3: 시각화 ───────────────────────────────────
-
-// ══════════════════════════════════════════════════════════════
-// v11.0 — 반자동 연동: 프롬프트 자동 복사 + Claude 열기 + 결과 자동 인식
-// ══════════════════════════════════════════════════════════════
-var V11_DEFAULT_URL='https://claude.ai/new';
-var V11_WAITING=false, V11_LAST='';
-function v11Store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
-function getClaudeUrl(){ var u=v11Store('bt_claude_url'); return (u && /^https:\/\/claude\.ai\//.test(u)) ? u : V11_DEFAULT_URL; }
-function showClaudeUrl(){ var el=$('claudeUrlView'); if(el) el.textContent=getClaudeUrl(); }
-function toggleUrlSet(){ var b=$('urlSetBox'); b.hidden=!b.hidden; if(!b.hidden){ $('iClaudeUrl').value=getClaudeUrl(); $('iClaudeUrl').focus(); } }
-function saveClaudeUrl(){
-  var u=($('iClaudeUrl').value||'').trim();
-  if(u && !/^https:\/\/claude\.ai\//.test(u)){ v11Msg('Claude 주소는 https://claude.ai/ 로 시작해야 합니다.', true); return; }
-  v11Store('bt_claude_url', u||V11_DEFAULT_URL); showClaudeUrl(); $('urlSetBox').hidden=true;
-  v11Msg('Claude 주소를 저장했습니다. 다음부터 이 주소가 열립니다.');
-}
-function v11Msg(t, warn){ var el=$('v11Status'); if(!el) return; el.textContent=t; el.style.color=warn?'#9B2626':'#3B4FB0'; el.style.background=warn?'#FDEAEA':'#EEF2FF'; el.style.borderColor=warn?'#E87070':'#9BB0F0'; }
-function goClaude(){
-  var p=($('promptText').textContent||'').trim(); if(!p) return;
-  var opened=window.open(getClaudeUrl(),'_blank');
-  var after=function(ok){
-    V11_WAITING=true;
-    v11Msg((ok?'✅ 프롬프트를 복사했습니다. ':'⚠️ 자동 복사가 막혀 있습니다. 아래 프롬프트의 [복사] 버튼을 누른 뒤 ')+'Claude 창에서 Ctrl+V → 전송하세요. 답변이 끝나면 답변 전체를 복사하고 이 탭으로 돌아오세요.'+(opened?'':' (팝업이 차단되어 Claude 창이 열리지 않았습니다. 주소창 오른쪽 팝업 허용 후 다시 누르세요.)'), !ok||!opened);
-  };
-  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(p).then(function(){after(true);},function(){after(false);}); }
-  else after(false);
-}
-// Claude 답변 텍스트에서 분석 JSON인지 판단
-function v11LooksLikeResult(t){
-  if(!t || t.length<200) return false;
-  var m=t.match(/\{[\s\S]*\}/); if(!m) return false;
-  return /"(verification_log|adjusted_monthly_sales|reference_stores)"/.test(m[0]);
-}
-function v11TryRender(t, src){
-  if(!v11LooksLikeResult(t)) return false;
-  if(t===V11_LAST && $('resultBox').style.display==='block') return true;
-  V11_LAST=t; V11_WAITING=false;
-  $('jsonInput').value=t;
-  v11Msg('✅ Claude 답변을 인식했습니다'+(src?' ('+src+')':'')+' · 결과를 표시합니다.');
-  visualize();
-  return true;
-}
-// 탭으로 돌아오면 클립보드 확인(처음 한 번 브라우저가 허용을 물어봄)
-function v11CheckClipboard(){
-  if(!V11_WAITING || $('step2Box').style.display!=='block') return;
-  if(!navigator.clipboard || !navigator.clipboard.readText) return;
-  navigator.clipboard.readText().then(function(t){
-    if(!v11TryRender(t,'클립보드 자동 인식')){
-      if(t && t.trim()===($('promptText').textContent||'').trim()) v11Msg('아직 Claude 답변이 복사되지 않았습니다. Claude 답변이 끝나면 답변 아래 복사 버튼을 누르고 돌아오세요.');
-    }
-  }).catch(function(){ v11Msg('이 화면 아무 곳에서나 Ctrl+V 하면 결과가 표시됩니다. (클립보드 자동 읽기가 허용되지 않음)'); });
-}
-window.addEventListener('focus', function(){ setTimeout(v11CheckClipboard, 300); });
-document.addEventListener('visibilitychange', function(){ if(!document.hidden) setTimeout(v11CheckClipboard, 300); });
-// 화면 아무 곳에서나 붙여넣기 → 바로 시각화
-document.addEventListener('paste', function(e){
-  if($('step2Box').style.display!=='block') return;
-  var t=(e.clipboardData||window.clipboardData).getData('text');
-  var tg=e.target; var inForm=tg && (tg.tagName==='INPUT') ;
-  if(inForm) return;
-  if(v11TryRender(t, '붙여넣기')){ e.preventDefault(); }
-  else if(tg && tg.id==='jsonInput'){ setTimeout(function(){ if(!v11TryRender($('jsonInput').value,'붙여넣기')) v11Msg('붙여넣은 내용에서 분석 결과 JSON을 찾지 못했습니다. Claude 답변 전체를 다시 복사해 주세요.', true); },0); }
-});
-document.addEventListener('DOMContentLoaded', showClaudeUrl);
 function visualize(){
   var raw=$('jsonInput').value.trim();
   if(!raw){alert('JSON을 붙여넣어 주세요.');return;}
@@ -2040,13 +1963,13 @@ function renderResult(r){
     +'</div>'
 
     +'<div class="card"><div class="card-title">🏪 참조 유사 가맹점 <span style="font-size:10px;background:#EEF2FF;color:#3B4FB0;border-radius:6px;padding:2px 7px;margin-left:4px">2021년↑ '+STORES_107.length+'개 실매출 · 객관 6항목 + 상권유형 대조</span></div><div class="store-list">'+stH+'</div></div>'
-    +(rcH?'<div class="card"><div class="card-title">🧮 위젯 재계산 검증 (v11.0)</div>'+rcH+'</div>':'')
+    +(rcH?'<div class="card"><div class="card-title">🧮 위젯 재계산 검증 (v10.8)</div>'+rcH+'</div>':'')
     +(brH?'<div class="card"><div class="card-title">🏷️ 인근 벌툰 가맹점</div>'+brH+'</div>':'')
     +(catH?'<div class="card"><div class="card-title">📊 상권 종합 점수</div><div class="cat-grid">'+catH+'</div></div>':'')
     +(vlH?'<div class="card"><div class="card-title">🔍 검증 로그 (실제 검색 근거)</div>'+vlH+'</div>':'')
     +'<div class="summary-card"><div class="sum-text">'+r.location_summary+'</div><div class="tag-lbl">핵심 강점</div><div class="tags">'+strH+'</div><div class="tag-lbl">주요 리스크</div><div class="tags">'+rkH+'</div></div>'
     +(detH?'<div class="card"><div class="card-title">🔍 세부 분석</div><div class="det-list">'+detH+'</div></div>':'')
-    +'<div class="note"><b>v11.0 · 📅 2026년 최신 · 브랜드거리: '+STORES_ALL.length+'개 / 예상매출: 2021년↑ '+STORES_107.length+'개 실매출 · 참조 프로파일 '+REF_PROFILES_DATE+' 고정</b><br>'
+    +'<div class="note"><b>v10.8 · 📅 2026년 최신 · 브랜드거리: '+STORES_ALL.length+'개 / 예상매출: 2021년↑ '+STORES_107.length+'개 실매출 · 참조 프로파일 '+REF_PROFILES_DATE+' 고정</b><br>'
     +'수익공식: 순수익 = 월매출 × 56% - 임대료 (고정지출 44% 자동 차감)<br>'
     +'등급: C(500만↓ 입점불가) · +(500~1천) · A(1천~1.5천) · A+(1.5천~2천) · AA… M=메인입지 접두사<br>'
     +'참조선정: 위젯 후보 10곳(객관 6항목 자동 대조) → ①상권유형 판정 → 7항목 고정 가중치 · 평수 보정 지수 0.85<br>'
